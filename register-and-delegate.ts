@@ -10,7 +10,7 @@ import {
   isValidPoolId,
   formatAdaAmount,
 } from "./helpers/cardano-tx";
-import { pierTwoPoolId, getBlockfrostApiKey, getCardanoPrivateKey } from "./helpers/config";
+import { pierTwoPoolId, getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
 import { signAndSubmitTransaction, getTransactionStatus } from "./helpers/mesh-sdk";
 
 const argv = yargs(hideBin(process.argv))
@@ -92,11 +92,11 @@ async function registerAndDelegate() {
       
       try {
         const blockfrostApiKey = getBlockfrostApiKey();
-        const privateKey = getCardanoPrivateKey();
+        const mnemonic = getCardanoMnemonic();
         
         const txHash = await signAndSubmitTransaction(
           response.data.unsignedTx,
-          privateKey,
+          mnemonic,
           blockfrostApiKey
         );
         

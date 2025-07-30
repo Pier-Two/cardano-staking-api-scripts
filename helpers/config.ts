@@ -1,13 +1,9 @@
 // Load environment variables
 import * as dotenv from "dotenv";
+import { createApiClient } from "./create-api-client";
 
 // Load .env file from the current working directory
 dotenv.config();
-
-/**
- * Cardano network configuration
- */
-export const cardanoNetwork = process.env.CARDANO_NETWORK || "preview"; // preview, preprod, mainnet
 
 /**
  * API base URL for Cardano staking API
@@ -36,15 +32,54 @@ export const pierTwoPoolId =
 export const blockfrostApiKey = process.env.BLOCKFROST_API_KEY;
 
 /**
- * Cardano private key for transaction signing
+ * Cardano mnemonic/seed phrase for wallet creation
+ */
+export const cardanoMnemonic = process.env.CARDANO_MNEMONIC;
+
+/**
+ * Cardano private key for transaction signing (legacy support)
  */
 export const cardanoPrivateKey = process.env.CARDANO_PRIVATE_KEY;
+
+/**
+ * Fallback Cardano network configuration (used if API is unavailable)
+ */
+export const fallbackCardanoNetwork = process.env.CARDANO_NETWORK || "preview";
+
+/**
+ * Get Cardano network from API or fallback to environment variable
+ */
+export async function getCardanoNetwork(): Promise<string> {
+  try {
+    const api = createApiClient();
+    const response = await api.public.networkConfig();
+    return response.data.cardano.network;
+  } catch (error) {
+    console.warn("Failed to fetch network config from API, using fallback:", fallbackCardanoNetwork);
+    return fallbackCardanoNetwork;
+  }
+}
+
+/**
+ * Get Cardano network synchronously (for backward compatibility)
+ * This will use the fallback value
+ */
+export function getCardanoNetworkSync(): string {
+  return fallbackCardanoNetwork;
+}
 
 export function getBlockfrostApiKey(): string {
   if (!blockfrostApiKey) {
     throw new Error("BLOCKFROST_API_KEY environment variable is required");
   }
   return blockfrostApiKey;
+}
+
+export function getCardanoMnemonic(): string {
+  if (!cardanoMnemonic) {
+    throw new Error("CARDANO_MNEMONIC environment variable is required");
+  }
+  return cardanoMnemonic;
 }
 
 export function getCardanoPrivateKey(): string {

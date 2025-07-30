@@ -1,4 +1,4 @@
-import { cardanoNetwork } from "./config";
+import { getCardanoNetworkSync } from "./config";
 
 /**
  * Validate a Cardano address
@@ -21,10 +21,10 @@ export function isValidPoolId(poolId: string): boolean {
 }
 
 /**
- * Get the Cardano network configuration
+ * Get the Cardano network configuration (synchronous version)
  */
 export function getCardanoNetwork() {
-  return cardanoNetwork === "mainnet" ? "mainnet" : "preview";
+  return getCardanoNetworkSync() === "mainnet" ? "mainnet" : "preview";
 }
 
 /**

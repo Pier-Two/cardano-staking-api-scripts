@@ -10,6 +10,8 @@
     "register-stake-address": "node -r @swc-node/register register-stake-address.ts",
     "delegate-stake": "node -r @swc-node/register delegate-stake.ts",
     "register-and-delegate": "node -r @swc-node/register register-and-delegate.ts",
+    "test-wallet": "node -r @swc-node/register test-wallet.ts",
+    "test-network": "node -r @swc-node/register test-network.ts",
     "lint:deps": "knip",
     "check:missing": "knip --include unlisted",
     "lint": "eslint . --ext .ts",

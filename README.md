@@ -42,11 +42,10 @@ Edit `.env` with your configuration:
 # Required
 API_KEY=your_pier_two_api_key_here
 BLOCKFROST_API_KEY=your_blockfrost_api_key_here
-CARDANO_PRIVATE_KEY=your_cardano_private_key_here
+CARDANO_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
 
 # Optional
 API_BASE_URL=https://api.piertwo.com
-CARDANO_NETWORK=mainnet
 PIER_TWO_POOL_ID=pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d
 ```
 
@@ -130,10 +129,47 @@ pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q
 3. **Submit Transaction**: Broadcast the signed transaction to the Cardano network
 4. **Monitor**: Track transaction confirmation and delegation status
 
-### Automated Workflow
+### Automated Workflow (Recommended)
 1. **Craft, Sign & Submit**: Use the `--sign-and-submit` flag to automatically handle the entire process
 2. **Wait for Confirmation**: Use the `--wait-confirmation` flag to wait for transaction confirmation
 3. **Monitor**: The script will display transaction status and confirmation details
+
+## Wallet Integration
+
+This project now includes proper transaction signing using the Mesh SDK with mnemonic/seed phrase support. The wallet integration provides:
+
+### Features
+- **Automatic Transaction Signing**: Sign transactions using your Cardano mnemonic/seed phrase
+- **Direct Network Submission**: Submit signed transactions directly to the Cardano network
+- **Transaction Status Monitoring**: Check transaction confirmation status
+- **Multi-Network Support**: Works with mainnet, preview, and preprod networks
+- **Backward Compatibility**: Legacy private key support is still available
+
+### Setup
+1. **Mnemonic/Seed Phrase**: Set your Cardano mnemonic in the `CARDANO_MNEMONIC` environment variable
+2. **Blockfrost API**: Ensure your `BLOCKFROST_API_KEY` is configured for network access
+3. **Network Configuration**: The network is automatically fetched from the Pier Two API. You can set `CARDANO_NETWORK` as a fallback if the API is unavailable
+
+### Testing
+Test your wallet configuration:
+```bash
+pnpm test-wallet
+```
+
+This will verify that your mnemonic and Blockfrost API key are working correctly.
+
+### Mnemonic Format
+Your mnemonic should be a space-separated list of words (typically 12, 15, 18, 21, or 24 words). For example:
+```
+abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+```
+
+**Important**: Keep your mnemonic secure and never share it with anyone. Anyone with access to your mnemonic can control your wallet.
+
+### Security
+- **Mnemonic Storage**: Store your mnemonic securely in environment variables
+- **Never Commit**: Never commit mnemonics to version control
+- **Network Validation**: Always verify you're using the correct network (mainnet vs testnet)
 
 ## Configuration
 
@@ -142,18 +178,22 @@ pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q
 #### Required
 - `API_KEY`: Your Pier Two API key
 - `BLOCKFROST_API_KEY`: Your Blockfrost API key for network access
-- `CARDANO_PRIVATE_KEY`: Your Cardano private key for transaction signing
+- `CARDANO_MNEMONIC`: Your Cardano mnemonic/seed phrase for wallet creation
 
 #### Optional
 - `API_BASE_URL`: API base URL (default: http://localhost:3000)
-- `CARDANO_NETWORK`: Network to use (mainnet, preview, preprod)
+- `CARDANO_NETWORK`: Fallback network if API is unavailable (mainnet, preview, preprod)
 - `PIER_TWO_POOL_ID`: Default pool ID for delegation
 
 ### Network Support
 
+The network configuration is automatically fetched from the Pier Two API to ensure you're always using the correct network for your environment.
+
 - **Mainnet**: Production Cardano network
-- **Preview**: Test network for development
+- **Preview**: Test network for development  
 - **Preprod**: Pre-production test network
+
+**Fallback**: If the API is unavailable, the system will use the `CARDANO_NETWORK` environment variable as a fallback.
 
 ## API Endpoints
 
