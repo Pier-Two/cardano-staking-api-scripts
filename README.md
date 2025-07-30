@@ -16,6 +16,8 @@ This repository contains scripts for interacting with the Pier Two Cardano staki
 - pnpm package manager
 - Valid Pier Two API key
 - Cardano wallet with stake addresses
+- Blockfrost API key (for transaction submission)
+- Cardano private key (for transaction signing)
 
 ## Installation
 
@@ -37,7 +39,12 @@ cp .env.example .env
 
 Edit `.env` with your configuration:
 ```env
+# Required
 API_KEY=your_pier_two_api_key_here
+BLOCKFROST_API_KEY=your_blockfrost_api_key_here
+CARDANO_PRIVATE_KEY=your_cardano_private_key_here
+
+# Optional
 API_BASE_URL=https://api.piertwo.com
 CARDANO_NETWORK=mainnet
 PIER_TWO_POOL_ID=pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d
@@ -79,12 +86,27 @@ With custom pool:
 pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --pool-id pool1abc123...
 ```
 
+Sign and submit automatically:
+```bash
+pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
+```
+
+With confirmation waiting:
+```bash
+pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit --wait-confirmation
+```
+
 ### Delegate Stake
 
 Craft a transaction to delegate stake to a pool:
 
 ```bash
 pnpm delegate-stake --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f
+```
+
+Sign and submit automatically:
+```bash
+pnpm delegate-stake --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
 ```
 
 ### Register and Delegate
@@ -95,18 +117,34 @@ Perform both registration and delegation in a single transaction:
 pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f
 ```
 
+Sign and submit automatically:
+```bash
+pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
+```
+
 ## Transaction Workflow
 
+### Manual Workflow
 1. **Craft Transaction**: Use the scripts to create unsigned transactions
 2. **Sign Transaction**: Use your Cardano wallet to sign the CBOR transaction
 3. **Submit Transaction**: Broadcast the signed transaction to the Cardano network
 4. **Monitor**: Track transaction confirmation and delegation status
 
+### Automated Workflow
+1. **Craft, Sign & Submit**: Use the `--sign-and-submit` flag to automatically handle the entire process
+2. **Wait for Confirmation**: Use the `--wait-confirmation` flag to wait for transaction confirmation
+3. **Monitor**: The script will display transaction status and confirmation details
+
 ## Configuration
 
 ### Environment Variables
 
-- `API_KEY`: Your Pier Two API key (required)
+#### Required
+- `API_KEY`: Your Pier Two API key
+- `BLOCKFROST_API_KEY`: Your Blockfrost API key for network access
+- `CARDANO_PRIVATE_KEY`: Your Cardano private key for transaction signing
+
+#### Optional
 - `API_BASE_URL`: API base URL (default: http://localhost:3000)
 - `CARDANO_NETWORK`: Network to use (mainnet, preview, preprod)
 - `PIER_TWO_POOL_ID`: Default pool ID for delegation

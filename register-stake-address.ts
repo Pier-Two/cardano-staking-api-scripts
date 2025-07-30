@@ -10,7 +10,8 @@ import {
   isValidPoolId,
   formatAdaAmount,
 } from "./helpers/cardano-tx";
-import { pierTwoPoolId } from "./helpers/config";
+import { pierTwoPoolId, getBlockfrostApiKey, getCardanoPrivateKey } from "./helpers/config";
+import { signAndSubmitTransaction, getTransactionStatus } from "./helpers/mesh-sdk";
 
 const argv = yargs(hideBin(process.argv))
   .option("stake-address", {
@@ -30,6 +31,18 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     description:
       "Payment address for UTXO selection (optional, defaults to reward address)",
+  })
+  .option("sign-and-submit", {
+    alias: "s",
+    type: "boolean",
+    description: "Sign and submit the transaction automatically",
+    default: false,
+  })
+  .option("wait-confirmation", {
+    alias: "w",
+    type: "boolean",
+    description: "Wait for transaction confirmation",
+    default: false,
   })
   .help()
   .alias("help", "h")
@@ -76,11 +89,49 @@ async function registerStakeAddress() {
     console.log(`   UTXOs In: ${response.data.utxosIn.length}`);
     console.log(`   UTXOs Out: ${response.data.utxosOut.length}`);
 
-    console.log("\n🔧 Next Steps:");
-    console.log("1. Sign the unsigned transaction using your wallet:");
-    console.log(`   Unsigned Transaction (CBOR): ${response.data.unsignedTx}`);
-    console.log("\n2. Submit the signed transaction to the Cardano network");
-    console.log("\n3. Wait for confirmation (typically 1-2 epochs)");
+    if (argv.signAndSubmit) {
+      spinner.text = "Signing and submitting transaction...";
+      
+      try {
+        const blockfrostApiKey = getBlockfrostApiKey();
+        const privateKey = getCardanoPrivateKey();
+        
+        const txHash = await signAndSubmitTransaction(
+          response.data.unsignedTx,
+          privateKey,
+          blockfrostApiKey
+        );
+        
+        spinner.succeed("Transaction signed and submitted successfully!");
+        console.log(`\n✅ Transaction Hash: ${txHash}`);
+        
+        if (argv.waitConfirmation) {
+          spinner.text = "Waiting for transaction confirmation...";
+          
+          // Wait for confirmation (simplified for now)
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          const status = await getTransactionStatus(txHash, blockfrostApiKey);
+          if (status.confirmed) {
+            spinner.succeed("Transaction confirmed!");
+            console.log(`   Block Height: ${status.blockHeight}`);
+          } else {
+            spinner.warn("Transaction submitted but not yet confirmed");
+            console.log("   Check the transaction hash on a Cardano explorer");
+          }
+        }
+      } catch (error) {
+        spinner.fail("Failed to sign and submit transaction");
+        handleApiError(error, "signing and submitting transaction");
+        process.exit(1);
+      }
+    } else {
+      console.log("\n🔧 Next Steps:");
+      console.log("1. Sign the unsigned transaction using your wallet:");
+      console.log(`   Unsigned Transaction (CBOR): ${response.data.unsignedTx}`);
+      console.log("\n2. Submit the signed transaction to the Cardano network");
+      console.log("\n3. Wait for confirmation (typically 1-2 epochs)");
+    }
 
     console.log("\n⚠️  Important Notes:");
     console.log("- Keep your private keys secure");
