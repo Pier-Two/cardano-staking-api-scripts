@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["*.ts", "api/*.ts", "helpers/*.ts"],
+  "project": ["**/*.ts"],
+  "ignoreDependencies": ["@swc-node/register", "@swc/core", "typescript"],
+  "ignoreExportsUsedInFile": true
+}
