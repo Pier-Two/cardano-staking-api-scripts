@@ -6,14 +6,10 @@ import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
 import {
-  isValidStakeAddress,
-  isValidPaymentAddress,
-  isValidPoolId,
   formatAdaAmount,
 } from "./helpers/cardano-tx";
-import { pierTwoPoolId, getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
-import { signAndSubmitTransaction, getTransactionStatus } from "./helpers/mesh-sdk";
-import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic } from "./helpers/csl-sdk";
+import { getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
+import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic, deserializeTransactionCbor } from "./helpers/csl-sdk";
 
 const argv = yargs(hideBin(process.argv))
   .option("address-index", {
@@ -22,14 +18,8 @@ const argv = yargs(hideBin(process.argv))
     description: "Address index to derive stake and payment addresses from",
     demandOption: true,
   })
-  .option("pool-id", {
-    alias: "pi",
-    type: "string",
-    description: "Stake pool ID to delegate to (defaults to Pier Two pool)",
-    default: pierTwoPoolId,
-  })
   .option("sign-and-submit", {
-    alias: "ss",
+    alias: "s",
     type: "boolean",
     description: "Sign and submit the transaction automatically",
     default: false,
@@ -50,13 +40,9 @@ async function registerStakeAddress() {
   ).start();
 
   try {
-    if (!isValidPoolId(argv.poolId)) {
-      throw new Error("Invalid pool ID format");
-    }
-
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
-    const { paymentAddress, stakeAddress } = await derivePrivateKeyAndAddressesFromMnemonic(
+    const { paymentAddress, stakeAddress, stakeKey, paymentKey } = await derivePrivateKeyAndAddressesFromMnemonic(
       mnemonic,
       argv.addressIndex
     );
@@ -68,11 +54,13 @@ async function registerStakeAddress() {
     const response = await api.cardano.craftCardanoRegisterStakeAddressTx(
       {
         stakeAddress: stakeAddress,
-        poolId: argv.poolId,
-        paymentAddress: paymentAddress,
+        utxoAddress: paymentAddress,
       },
       {},
     );
+
+    // deserialize the transaction
+    deserializeTransactionCbor(response.data.unsignedTx);
 
     spinner.succeed("Transaction crafted successfully!");
 
@@ -81,10 +69,6 @@ async function registerStakeAddress() {
     console.log(`   Payment Address: ${paymentAddress}`);
     console.log(`   Pool ID: ${argv.poolId}`);
     console.log(`   Fee: ${formatAdaAmount(response.data.fee)}`);
-    console.log(`   Transaction Size: ${response.data.txSize} bytes`);
-    console.log(
-      `   Minimum Required ADA: ${formatAdaAmount(response.data.minRequiredAda)}`,
-    );
     console.log(`   UTXOs In: ${response.data.utxosIn.length}`);
     console.log(`   UTXOs Out: ${response.data.utxosOut.length}`);
 
@@ -96,9 +80,9 @@ async function registerStakeAddress() {
         
         const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
-          mnemonic,
-          blockfrostApiKey,
-          argv.addressIndex
+          // only require signature from payment address since we are spending a utxo from it
+          [paymentKey],
+          blockfrostApiKey
         );
         
         spinner.succeed("Transaction signed and submitted successfully!");

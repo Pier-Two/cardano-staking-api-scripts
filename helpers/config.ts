@@ -44,7 +44,7 @@ export const cardanoPrivateKey = process.env.CARDANO_PRIVATE_KEY;
 /**
  * Fallback Cardano network configuration (used if API is unavailable)
  */
-export const fallbackCardanoNetwork = process.env.CARDANO_NETWORK || "preview";
+export const fallbackCardanoNetwork = process.env.CARDANO_NETWORK || "preprod";
 
 /**
  * Get Cardano network from API or fallback to environment variable

@@ -7,6 +7,7 @@
     "generate-api": "npx swagger-typescript-api generate --path http://localhost:3000/docs-json --output ./generated --name api.ts --unwrap-response-data",
     "add-stake-account": "node -r @swc-node/register add-stake-account.ts",
     "list-stakes": "node -r @swc-node/register list-stakes.ts",
+    "list-addresses": "node -r @swc-node/register list-addresses.ts",
     "register-stake-address": "node -r @swc-node/register register-stake-address.ts",
     "delegate-stake": "node -r @swc-node/register delegate-stake.ts",
     "register-and-delegate": "node -r @swc-node/register register-and-delegate.ts",

@@ -1,6 +1,5 @@
 /* eslint-disable */
 /* tslint:disable */
-// @ts-nocheck
 /*
  * ---------------------------------------------------------------
  * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -1433,23 +1432,13 @@ export interface CardanoTransactionCraftingResponse {
    */
   fee: string;
   /**
-   * The transaction size in bytes
-   * @example "1234"
-   */
-  txSize: number;
-  /**
-   * The minimum required ADA for the transaction
-   * @example "2000000"
-   */
-  minRequiredAda: string;
-  /**
-   * Number of UTXOs selected for the transaction
-   * @example [{"txHash":"0x1234567890abcdef...","outputIndex":0,"amount":"1000000","address":"addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"}]
+   * UTXOs being spent as part of the transaction
+   * @example [{"txHash":"0x1234567890abcdef...","outputIndex":0,"lovelacee":"1000000","address":"addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"}]
    */
   utxosIn: string[];
   /**
-   * Number of UTXOs selected for the transaction
-   * @example [{"txHash":"0x1234567890abcdef...","outputIndex":0,"amount":"1000000","address":"addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"}]
+   * UTXOs being created as change outputs
+   * @example [{"txHash":"0x1234567890abcdef...","outputIndex":0,"lovelace":"1000000","address":"addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"}]
    */
   utxosOut: string[];
 }
@@ -1461,15 +1450,15 @@ export interface CardanoRegisterStakeAddressDto {
    */
   stakeAddress: string;
   /**
-   * The stake pool ID to delegate to
-   * @example "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d"
-   */
-  poolId: string;
-  /**
-   * The payment address to use for UTXO selection (optional, defaults to reward address)
+   * The address to use for UTXO selection
    * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
    */
-  paymentAddress?: string;
+  utxoAddress: string;
+  /**
+   * The address to spend utxos to. If not provided, the change will be returned to the utxoAddress
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  changeAddress?: string;
 }
 
 export interface CardanoDelegateStakeDto {
@@ -1479,15 +1468,20 @@ export interface CardanoDelegateStakeDto {
    */
   stakeAddress: string;
   /**
+   * The address to use for UTXO selection
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  utxoAddress: string;
+  /**
+   * The address to spend utxos to. If not provided, the change will be returned to the utxoAddress
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  changeAddress?: string;
+  /**
    * The stake pool ID to delegate to
    * @example "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d"
    */
   poolId: string;
-  /**
-   * The payment address to use for UTXO selection (optional, defaults to reward address)
-   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
-   */
-  paymentAddress?: string;
 }
 
 export interface CardanoRegisterAndDelegateDto {
@@ -1497,15 +1491,20 @@ export interface CardanoRegisterAndDelegateDto {
    */
   stakeAddress: string;
   /**
+   * The address to use for UTXO selection
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  utxoAddress: string;
+  /**
+   * The address to spend utxos to. If not provided, the change will be returned to the utxoAddress
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  changeAddress?: string;
+  /**
    * The stake pool ID to delegate to
    * @example "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d"
    */
   poolId: string;
-  /**
-   * The payment address to use for UTXO selection (optional, defaults to reward address)
-   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
-   */
-  paymentAddress?: string;
 }
 
 export interface WebsiteDataPrices {
@@ -1609,22 +1608,16 @@ export interface FullRequestParams extends Omit<RequestInit, "body"> {
   cancelToken?: CancelToken;
 }
 
-export type RequestParams = Omit<
-  FullRequestParams,
-  "body" | "method" | "query" | "path"
->;
+export type RequestParams = Omit<FullRequestParams, "body" | "method" | "query" | "path">;
 
 export interface ApiConfig<SecurityDataType = unknown> {
   baseUrl?: string;
   baseApiParams?: Omit<RequestParams, "baseUrl" | "cancelToken" | "signal">;
-  securityWorker?: (
-    securityData: SecurityDataType | null,
-  ) => Promise<RequestParams | void> | RequestParams | void;
+  securityWorker?: (securityData: SecurityDataType | null) => Promise<RequestParams | void> | RequestParams | void;
   customFetch?: typeof fetch;
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown>
-  extends Response {
+export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
   data: D;
   error: E;
 }
@@ -1633,7 +1626,6 @@ type CancelToken = Symbol | string | number;
 
 export enum ContentType {
   Json = "application/json",
-  JsonApi = "application/vnd.api+json",
   FormData = "multipart/form-data",
   UrlEncoded = "application/x-www-form-urlencoded",
   Text = "text/plain",
@@ -1644,8 +1636,7 @@ export class HttpClient<SecurityDataType = unknown> {
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private abortControllers = new Map<CancelToken, AbortController>();
-  private customFetch = (...fetchParams: Parameters<typeof fetch>) =>
-    fetch(...fetchParams);
+  private customFetch = (...fetchParams: Parameters<typeof fetch>) => fetch(...fetchParams);
 
   private baseApiParams: RequestParams = {
     credentials: "same-origin",
@@ -1678,15 +1669,9 @@ export class HttpClient<SecurityDataType = unknown> {
 
   protected toQueryString(rawQuery?: QueryParamsType): string {
     const query = rawQuery || {};
-    const keys = Object.keys(query).filter(
-      (key) => "undefined" !== typeof query[key],
-    );
+    const keys = Object.keys(query).filter((key) => "undefined" !== typeof query[key]);
     return keys
-      .map((key) =>
-        Array.isArray(query[key])
-          ? this.addArrayQueryParam(query, key)
-          : this.addQueryParam(query, key),
-      )
+      .map((key) => (Array.isArray(query[key]) ? this.addArrayQueryParam(query, key) : this.addQueryParam(query, key)))
       .join("&");
   }
 
@@ -1697,17 +1682,8 @@ export class HttpClient<SecurityDataType = unknown> {
 
   private contentFormatters: Record<ContentType, (input: any) => any> = {
     [ContentType.Json]: (input: any) =>
-      input !== null && (typeof input === "object" || typeof input === "string")
-        ? JSON.stringify(input)
-        : input,
-    [ContentType.JsonApi]: (input: any) =>
-      input !== null && (typeof input === "object" || typeof input === "string")
-        ? JSON.stringify(input)
-        : input,
-    [ContentType.Text]: (input: any) =>
-      input !== null && typeof input !== "string"
-        ? JSON.stringify(input)
-        : input,
+      input !== null && (typeof input === "object" || typeof input === "string") ? JSON.stringify(input) : input,
+    [ContentType.Text]: (input: any) => (input !== null && typeof input !== "string" ? JSON.stringify(input) : input),
     [ContentType.FormData]: (input: any) =>
       Object.keys(input || {}).reduce((formData, key) => {
         const property = input[key];
@@ -1724,10 +1700,7 @@ export class HttpClient<SecurityDataType = unknown> {
     [ContentType.UrlEncoded]: (input: any) => this.toQueryString(input),
   };
 
-  protected mergeRequestParams(
-    params1: RequestParams,
-    params2?: RequestParams,
-  ): RequestParams {
+  protected mergeRequestParams(params1: RequestParams, params2?: RequestParams): RequestParams {
     return {
       ...this.baseApiParams,
       ...params1,
@@ -1740,9 +1713,7 @@ export class HttpClient<SecurityDataType = unknown> {
     };
   }
 
-  protected createAbortSignal = (
-    cancelToken: CancelToken,
-  ): AbortSignal | undefined => {
+  protected createAbortSignal = (cancelToken: CancelToken): AbortSignal | undefined => {
     if (this.abortControllers.has(cancelToken)) {
       const abortController = this.abortControllers.get(cancelToken);
       if (abortController) {
@@ -1786,26 +1757,15 @@ export class HttpClient<SecurityDataType = unknown> {
     const payloadFormatter = this.contentFormatters[type || ContentType.Json];
     const responseFormat = format || requestParams.format;
 
-    return this.customFetch(
-      `${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`,
-      {
-        ...requestParams,
-        headers: {
-          ...(requestParams.headers || {}),
-          ...(type && type !== ContentType.FormData
-            ? { "Content-Type": type }
-            : {}),
-        },
-        signal:
-          (cancelToken
-            ? this.createAbortSignal(cancelToken)
-            : requestParams.signal) || null,
-        body:
-          typeof body === "undefined" || body === null
-            ? null
-            : payloadFormatter(body),
+    return this.customFetch(`${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`, {
+      ...requestParams,
+      headers: {
+        ...(requestParams.headers || {}),
+        ...(type && type !== ContentType.FormData ? { "Content-Type": type } : {}),
       },
-    ).then(async (response) => {
+      signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
+      body: typeof body === "undefined" || body === null ? null : payloadFormatter(body),
+    }).then(async (response) => {
       const r = response.clone() as HttpResponse<T, E>;
       r.data = null as unknown as T;
       r.error = null as unknown as E;
@@ -1844,9 +1804,7 @@ export class HttpClient<SecurityDataType = unknown> {
  *
  * The Pier Two Staking API Docs
  */
-export class Api<
-  SecurityDataType extends unknown,
-> extends HttpClient<SecurityDataType> {
+export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
   solana = {
     /**
      * @description Returns the details of Solana staking positions for your account.
@@ -1884,10 +1842,7 @@ export class Api<
      * @summary Generate a Solana stake transaction payload
      * @request POST:/solana/stake/buildTransaction
      */
-    buildSolanaStakeTransactionPayload: (
-      data: BuildTransactionPayloadRequestDto,
-      params: RequestParams = {},
-    ) =>
+    buildSolanaStakeTransactionPayload: (data: BuildTransactionPayloadRequestDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildTransactionPayloadResponseDto;
@@ -2170,10 +2125,7 @@ export class Api<
      * @summary Create Pectra-era (0x02) validator(s)
      * @request POST:/ethereum/stakeV3
      */
-    createEthereumStakeV3: (
-      data: CreateStakePectraDto,
-      params: RequestParams = {},
-    ) =>
+    createEthereumStakeV3: (data: CreateStakePectraDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: CreateStakeV2Response;
@@ -2238,10 +2190,7 @@ export class Api<
      * @summary Get deposit data for Stake
      * @request GET:/ethereum/stake/{stakeId}/depositdata
      */
-    getEthereumDepositDataForStake: (
-      stakeId: string,
-      params: RequestParams = {},
-    ) =>
+    getEthereumDepositDataForStake: (stakeId: string, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: ValidatorDepositJson[];
@@ -2349,10 +2298,7 @@ export class Api<
      * @summary Generate exit message(s)
      * @request POST:/ethereum/genPresignedExitMsg
      */
-    genEthereumPresignedExitMsg: (
-      data: GenPresignedExitMsgDto,
-      params: RequestParams = {},
-    ) =>
+    genEthereumPresignedExitMsg: (data: GenPresignedExitMsgDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: ValidatorExitMessageResp[];
@@ -2375,10 +2321,7 @@ export class Api<
      * @summary Broadcast exit message(s)
      * @request POST:/ethereum/broadcastPresignedExitMsg
      */
-    broadcastEthereumPresignedExitMessage: (
-      data: ValidatorExitMessage,
-      params: RequestParams = {},
-    ) =>
+    broadcastEthereumPresignedExitMessage: (data: ValidatorExitMessage, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BeaconNodeVoluntaryExitResponse;
@@ -2401,10 +2344,7 @@ export class Api<
      * @summary Bulk withdraw Validators
      * @request POST:/ethereum/bulkWithdrawValidators
      */
-    bulkWithdrawEthereumValidators: (
-      data: GenPresignedExitMsgDto,
-      params: RequestParams = {},
-    ) =>
+    bulkWithdrawEthereumValidators: (data: GenPresignedExitMsgDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BulkWithdrawError[];
@@ -2427,10 +2367,7 @@ export class Api<
      * @summary Estimate validator exit times
      * @request POST:/ethereum/estimateWithdrawalTimes
      */
-    estimateEthereumWithdrawalTimes: (
-      data: EstimateWithdrawalTimesDto,
-      params: RequestParams = {},
-    ) =>
+    estimateEthereumWithdrawalTimes: (data: EstimateWithdrawalTimesDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EstimatedWithdrawalTimes[];
@@ -2453,10 +2390,7 @@ export class Api<
      * @summary Generate arbitrary amount deposit data
      * @request POST:/ethereum/validators/generateDepositData
      */
-    generateEthereumDepositData: (
-      data: GenerateDepositDataDto,
-      params: RequestParams = {},
-    ) =>
+    generateEthereumDepositData: (data: GenerateDepositDataDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: ValidatorDepositJson[];
@@ -2479,10 +2413,7 @@ export class Api<
      * @summary Generate validator top-up transaction
      * @request POST:/ethereum/txcrafting/validators/topup
      */
-    craftEthereumValidatorTopupTx: (
-      data: EthereumValidatorTopupDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorTopupTx: (data: EthereumValidatorTopupDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2505,10 +2436,7 @@ export class Api<
      * @summary Generate batch validator top-up transaction
      * @request POST:/ethereum/txcrafting/validators/batchtopup
      */
-    craftEthereumValidatorBatchTopupTx: (
-      data: EthereumValidatorBatchTopupDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorBatchTopupTx: (data: EthereumValidatorBatchTopupDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2531,10 +2459,7 @@ export class Api<
      * @summary Generate initial validator deposit transaction
      * @request POST:/ethereum/txcrafting/validators/deposit
      */
-    craftEthereumValidatorDepositTx: (
-      data: EthereumValidatorDepositDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorDepositTx: (data: EthereumValidatorDepositDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2557,10 +2482,7 @@ export class Api<
      * @summary Generate batch initialvalidator deposit transaction
      * @request POST:/ethereum/txcrafting/validators/batchdeposit
      */
-    craftEthereumValidatorBatchDepositTx: (
-      data: EthereumValidatorBatchDepositDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorBatchDepositTx: (data: EthereumValidatorBatchDepositDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2583,10 +2505,7 @@ export class Api<
      * @summary Generate validator withdrawal transaction
      * @request POST:/ethereum/txcrafting/validators/withdraw
      */
-    craftEthereumValidatorWithdrawTx: (
-      data: EthereumValidatorWithdrawDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorWithdrawTx: (data: EthereumValidatorWithdrawDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2609,10 +2528,7 @@ export class Api<
      * @summary Generate validator consolidation transaction
      * @request POST:/ethereum/txcrafting/validators/consolidate
      */
-    craftEthereumValidatorConsolidateTx: (
-      data: EthereumValidatorConsolidateDto,
-      params: RequestParams = {},
-    ) =>
+    craftEthereumValidatorConsolidateTx: (data: EthereumValidatorConsolidateDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: EthereumTransactionCraftingResponse;
@@ -2886,10 +2802,7 @@ export class Api<
      * @summary Build a post-stake bitcoin staking transaction
      * @request POST:/bitcoin/buildStakingTransaction
      */
-    buildStakingTransaction: (
-      data: BuildStakingTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    buildStakingTransaction: (data: BuildStakingTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildStakingTransactionResponseDto;
@@ -2912,10 +2825,7 @@ export class Api<
      * @summary Broadcast a signed bitcoin staking transaction for use with the post-stake flow
      * @request POST:/bitcoin/submitStakingTransaction
      */
-    submitStakingTransaction: (
-      data: SubmitStakingTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    submitStakingTransaction: (data: SubmitStakingTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: TransactionResponseDto;
@@ -2938,10 +2848,7 @@ export class Api<
      * @summary Get delegation payloads
      * @request POST:/bitcoin/getDelegationPayloads
      */
-    getDelegationPayloads: (
-      data: GetDelegationPayloadsDto,
-      params: RequestParams = {},
-    ) =>
+    getDelegationPayloads: (data: GetDelegationPayloadsDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: GetDelegationPayloadsResponseDto;
@@ -2964,10 +2871,7 @@ export class Api<
      * @summary Build a post-stake babylon registration transaction
      * @request POST:/bitcoin/buildRegistrationTransaction
      */
-    buildRegistrationTransaction: (
-      data: BuildRegistrationTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    buildRegistrationTransaction: (data: BuildRegistrationTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildRegistrationTransactionResponseDto;
@@ -3011,10 +2915,7 @@ export class Api<
      * @summary Build an unbonding transaction PSBT that needs to be signed by the staker.
      * @request POST:/bitcoin/buildUnbondingTransaction
      */
-    buildUnbondingTransaction: (
-      data: StakingTxRequestDto,
-      params: RequestParams = {},
-    ) =>
+    buildUnbondingTransaction: (data: StakingTxRequestDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildUnbondingTransactionResponseDto;
@@ -3037,10 +2938,7 @@ export class Api<
      * @summary Submit a staker-signed unbonding transaction PSBT for processing with covenant signatures and broadcasting.
      * @request POST:/bitcoin/submitUnbondingTransaction
      */
-    submitUnbondingTransaction: (
-      data: SubmitUnbondingTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    submitUnbondingTransaction: (data: SubmitUnbondingTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: TransactionResponseDto;
@@ -3063,10 +2961,7 @@ export class Api<
      * @summary Build a withdrawal transaction PSBT
      * @request POST:/bitcoin/buildWithdrawalTransaction
      */
-    buildWithdrawalTransaction: (
-      data: BuildWithdrawalTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    buildWithdrawalTransaction: (data: BuildWithdrawalTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildWithdrawalTransactionResponseDto;
@@ -3089,10 +2984,7 @@ export class Api<
      * @summary Submit a signed withdrawal transaction for broadcasting to the Bitcoin network
      * @request POST:/bitcoin/submitWithdrawalTransaction
      */
-    submitWithdrawalTransaction: (
-      data: SubmitWithdrawalTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    submitWithdrawalTransaction: (data: SubmitWithdrawalTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: TransactionResponseDto;
@@ -3166,10 +3058,7 @@ export class Api<
      * @summary Build an unsigned pre-stake staking transaction PSBT
      * @request POST:/bitcoin/buildPreStakeStakingTransaction
      */
-    buildPreStakeStakingTransaction: (
-      data: BuildPreStakeRegistrationDto,
-      params: RequestParams = {},
-    ) =>
+    buildPreStakeStakingTransaction: (data: BuildPreStakeRegistrationDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildPreStakeRegistrationResponseDto;
@@ -3192,10 +3081,7 @@ export class Api<
      * @summary Get delegation payloads for pre-stake
      * @request POST:/bitcoin/getDelegationPayloadsPreStake
      */
-    getDelegationPayloadsPreStake: (
-      data: GetDelegationPayloadsDto,
-      params: RequestParams = {},
-    ) =>
+    getDelegationPayloadsPreStake: (data: GetDelegationPayloadsDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: GetDelegationPayloadsResponseDto;
@@ -3218,10 +3104,7 @@ export class Api<
      * @summary Build a Babylon pre-stake transaction with signed delegation payloads
      * @request POST:/bitcoin/buildBabylonPreStakeTransaction
      */
-    buildBabylonPreStakeTransaction: (
-      data: BuildBabylonPreStakeTransactionDto,
-      params: RequestParams = {},
-    ) =>
+    buildBabylonPreStakeTransaction: (data: BuildBabylonPreStakeTransactionDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: BuildBabylonPreStakeTransactionResponseDto;
@@ -3244,10 +3127,7 @@ export class Api<
      * @summary Submit a signed pre-stake registration to Babylon for covenant verification
      * @request POST:/bitcoin/submitPreStakeRegistration
      */
-    submitPreStakeRegistration: (
-      data: SubmitPreStakeRegistrationDto,
-      params: RequestParams = {},
-    ) =>
+    submitPreStakeRegistration: (data: SubmitPreStakeRegistrationDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: SubmitPreStakeRegistrationResponseDto;
@@ -3384,10 +3264,7 @@ export class Api<
      * @summary Add Cardano Stake Account
      * @request POST:/cardano/stake/account
      */
-    addCardanoStakeAccount: (
-      data: AddStakeAccountDto,
-      params: RequestParams = {},
-    ) =>
+    addCardanoStakeAccount: (data: AddStakeAccountDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: CardanoStakeAccount;
@@ -3410,10 +3287,7 @@ export class Api<
      * @summary Craft Cardano Stake Address Registration Transaction
      * @request POST:/cardano/txcrafting/registerStakeAddress
      */
-    craftCardanoRegisterStakeAddressTx: (
-      data: CardanoRegisterStakeAddressDto,
-      params: RequestParams = {},
-    ) =>
+    craftCardanoRegisterStakeAddressTx: (data: CardanoRegisterStakeAddressDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: CardanoTransactionCraftingResponse;
@@ -3436,10 +3310,7 @@ export class Api<
      * @summary Craft Cardano Stake Delegation Transaction
      * @request POST:/cardano/txcrafting/delegateStake
      */
-    craftCardanoDelegateStakeTx: (
-      data: CardanoDelegateStakeDto,
-      params: RequestParams = {},
-    ) =>
+    craftCardanoDelegateStakeTx: (data: CardanoDelegateStakeDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: CardanoTransactionCraftingResponse;
@@ -3462,10 +3333,7 @@ export class Api<
      * @summary Craft Cardano Register and Delegate Transaction
      * @request POST:/cardano/txcrafting/registerAndDelegate
      */
-    craftCardanoRegisterAndDelegateTx: (
-      data: CardanoRegisterAndDelegateDto,
-      params: RequestParams = {},
-    ) =>
+    craftCardanoRegisterAndDelegateTx: (data: CardanoRegisterAndDelegateDto, params: RequestParams = {}) =>
       this.request<
         UtilRequiredKeys<ApiResponseBase, "data"> & {
           data: CardanoTransactionCraftingResponse;

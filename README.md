@@ -72,6 +72,19 @@ With pagination:
 pnpm list-stakes --page-number 1 --page-size 20
 ```
 
+### List Addresses
+
+View the payment and stake addresses for a specific address index:
+
+```bash
+pnpm list-addresses --address-index 0
+```
+
+This is useful for:
+- Verifying which addresses you're working with
+- Checking derivation paths
+- Getting usage examples for other commands
+
 ### Register a Stake Address
 
 Craft a transaction to register a new stake address:

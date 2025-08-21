@@ -32,7 +32,13 @@ export async function initializeCSL() {
 export async function derivePrivateKeyAndAddressesFromMnemonic(
   mnemonic: string,
   addressIndex: number = 0,
-): Promise<{ privateKey: CSL.PrivateKey; paymentAddress: string; stakeAddress: string }> {
+): Promise<{ 
+  privateKey: CSL.PrivateKey; 
+  paymentAddress: string; 
+  stakeAddress: string; 
+  paymentKey: CSL.PrivateKey; 
+  stakeKey: CSL.PrivateKey;
+}> {
   try {
     console.log(`Deriving private key and addresses for address index ${addressIndex}...`);
     
@@ -86,7 +92,13 @@ export async function derivePrivateKeyAndAddressesFromMnemonic(
     console.log(`   Payment path: m/1852'/1815'/${accountIndex}'/${role}/${addressIndex}`);
     console.log(`   Stake path: m/1852'/1815'/${accountIndex}'/2/0`);
     
-    return { privateKey: paymentKey.to_raw_key(), paymentAddress, stakeAddress };
+    return { 
+      privateKey: paymentKey.to_raw_key(), 
+      paymentAddress, 
+      paymentKey: paymentKey.to_raw_key(), 
+      stakeAddress, 
+      stakeKey: stakeKey.to_raw_key() 
+    };
   } catch (error) {
     throw new Error(`Failed to derive private key and addresses: ${error}`);
   }
@@ -110,16 +122,32 @@ export async function derivePrivateKeyFromMnemonic(
 export function deserializeTransactionCbor(cborHex: string) {
   try {
     console.log("\n🔍 DEBUG: Deserializing transaction CBOR using CSL...");
-    console.log(`Input CBOR (first 50 chars): ${cborHex.substring(0, 50)}...`);
+    console.log(`Input CBOR length: ${cborHex.length} characters`);
+    console.log(`Input CBOR (first 100 chars): ${cborHex.substring(0, 100)}...`);
+    console.log(`Input CBOR (last 100 chars): ...${cborHex.substring(cborHex.length - 100)}`);
+    
+    // Validate hex string
+    if (!/^[0-9a-fA-F]+$/.test(cborHex)) {
+      throw new Error("Invalid hex string format");
+    }
+    
+    // Check if length is even (hex strings should have even length)
+    if (cborHex.length % 2 !== 0) {
+      throw new Error(`Invalid hex string length: ${cborHex.length} (must be even)`);
+    }
+    
+    // Convert hex to buffer
+    const cborBuffer = Buffer.from(cborHex, 'hex');
+    console.log(`CBOR buffer length: ${cborBuffer.length} bytes`);
     
     // Deserialize transaction using CSL
-    const tx = CSL.Transaction.from_bytes(Buffer.from(cborHex, 'hex'));
+    const tx = CSL.Transaction.from_bytes(cborBuffer);
     const body = tx.body();
     
     // Extract basic transaction components
     const deserialized: any = {
       fee: body.fee().to_str(),
-      ttl: body.ttl() ? body?.ttl() : null,
+      ttl: body.ttl() ? body.ttl() : null,
       inputs: [],
       outputs: [],
       certificates: [],
@@ -167,6 +195,20 @@ export function deserializeTransactionCbor(cborHex: string) {
     return deserialized;
   } catch (error) {
     console.error("❌ Error deserializing transaction CBOR with CSL:", error);
+    console.error("🔍 CBOR hex string details:");
+    console.error(`  Length: ${cborHex.length} characters`);
+    console.error(`  First 200 chars: ${cborHex.substring(0, 200)}`);
+    console.error(`  Last 200 chars: ${cborHex.substring(Math.max(0, cborHex.length - 200))}`);
+    
+    // Try to identify common issues
+    if (cborHex.length === 0) {
+      console.error("  Issue: CBOR string is empty");
+    } else if (cborHex.length < 100) {
+      console.error("  Issue: CBOR string seems too short for a valid transaction");
+    } else if (!/^[0-9a-fA-F]+$/.test(cborHex)) {
+      console.error("  Issue: CBOR string contains non-hex characters");
+    }
+    
     throw new Error(`Failed to deserialize transaction CBOR: ${error}`);
   }
 }
@@ -176,22 +218,16 @@ export function deserializeTransactionCbor(cborHex: string) {
  */
 export async function signAndSubmitTransactionCSL(
   unsignedTxCbor: string,
-  mnemonic: string,
+  signingKeys: CSL.PrivateKey[],
   blockfrostApiKey: string,
-  addressIndex: number = 0
 ): Promise<string> {
   try {
     console.log(`Signing and submitting transaction with CSL...`);
-    console.log(`Address index: ${addressIndex}`);
-    console.log(`Mnemonic: ${mnemonic.substring(0, 8)}...`);
     
     // Debug: Deserialize transaction CBOR to JSON
     deserializeTransactionCbor(unsignedTxCbor);
     
     // Derive private key and address for the specified address index
-    const { privateKey, paymentAddress } = await derivePrivateKeyAndAddressesFromMnemonic(mnemonic, addressIndex);
-    
-    console.log(`🔍 DEBUG: Signing transaction with address: ${paymentAddress}`);
         
     // Deserialize transaction
     const tx = CSL.Transaction.from_bytes(Buffer.from(unsignedTxCbor, 'hex'));
@@ -204,10 +240,14 @@ export async function signAndSubmitTransactionCSL(
     const txBodyHash = CSL.TransactionHash.from_bytes(txBodyHashBytes);
     
     // Use the CSL make_vkey_witness function which properly handles the transaction body hash
-    const vkeyWitness = CSL.make_vkey_witness(txBodyHash, privateKey);
     const witnessSet = CSL.TransactionWitnessSet.new();
     const vkeys = CSL.Vkeywitnesses.new();
-    vkeys.add(vkeyWitness);
+    
+    for(const signer of signingKeys) {
+      const vkeyWitness = CSL.make_vkey_witness(txBodyHash, signer);
+      vkeys.add(vkeyWitness);
+    }
+
     witnessSet.set_vkeys(vkeys);
     
     // Build signed transaction

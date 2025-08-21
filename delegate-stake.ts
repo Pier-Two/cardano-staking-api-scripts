@@ -6,14 +6,11 @@ import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
 import {
-  isValidStakeAddress,
-  isValidPaymentAddress,
   isValidPoolId,
   formatAdaAmount,
 } from "./helpers/cardano-tx";
 import { pierTwoPoolId, getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
-import { signAndSubmitTransaction, getTransactionStatus } from "./helpers/mesh-sdk";
-import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic } from "./helpers/csl-sdk";
+import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic, deserializeTransactionCbor } from "./helpers/csl-sdk";
 
 const argv = yargs(hideBin(process.argv))
   .option("address-index", {
@@ -54,7 +51,12 @@ async function delegateStake() {
 
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
-    const { paymentAddress, stakeAddress } = await derivePrivateKeyAndAddressesFromMnemonic(
+    const { 
+      paymentAddress, 
+      stakeAddress, 
+      stakeKey, 
+      paymentKey 
+    } = await derivePrivateKeyAndAddressesFromMnemonic(
       mnemonic,
       argv.addressIndex
     );
@@ -67,10 +69,13 @@ async function delegateStake() {
       {
         stakeAddress: stakeAddress,
         poolId: argv.poolId,
-        paymentAddress: paymentAddress,
+        utxoAddress: paymentAddress,
       },
       {},
     );
+
+    // deserialize the transaction
+    deserializeTransactionCbor(response.data.unsignedTx);
 
     spinner.succeed("Transaction crafted successfully!");
 
@@ -79,10 +84,6 @@ async function delegateStake() {
     console.log(`   Payment Address: ${paymentAddress}`);
     console.log(`   Pool ID: ${argv.poolId}`);
     console.log(`   Fee: ${formatAdaAmount(response.data.fee)}`);
-    console.log(`   Transaction Size: ${response.data.txSize} bytes`);
-    console.log(
-      `   Minimum Required ADA: ${formatAdaAmount(response.data.minRequiredAda)}`,
-    );
     console.log(`   UTXOs In: ${response.data.utxosIn.length}`);
     console.log(`   UTXOs Out: ${response.data.utxosOut.length}`);
 
@@ -94,9 +95,9 @@ async function delegateStake() {
         
         const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
-          mnemonic,
-          blockfrostApiKey,
-          argv.addressIndex
+          // requires signatures from both since we are spending utxos from the payment address
+          [stakeKey, paymentKey],
+          blockfrostApiKey
         );
         
         spinner.succeed("Transaction signed and submitted successfully!");
