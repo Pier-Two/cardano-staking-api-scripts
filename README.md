@@ -108,6 +108,24 @@ With confirmation waiting:
 pnpm register-stake-address --address-index 0 --sign-and-submit --wait-confirmation
 ```
 
+### Deregister a Stake Address
+
+Craft a transaction to deregister a stake address:
+
+```bash
+pnpm deregister-stake-address --address-index 0
+```
+
+Sign and submit automatically:
+```bash
+pnpm deregister-stake-address --address-index 0 --sign-and-submit
+```
+
+With confirmation waiting:
+```bash
+pnpm deregister-stake-address --address-index 0 --sign-and-submit --wait-confirmation
+```
+
 ### Delegate Stake
 
 Craft a transaction to delegate stake to a pool:
@@ -242,6 +260,7 @@ The scripts interact with the following Pier Two API endpoints:
 - `GET /cardano/stakes` - List stake accounts
 - `POST /cardano/stake/account` - Add stake account
 - `POST /cardano/txcrafting/registerStakeAddress` - Craft registration transaction
+- `POST /cardano/txcrafting/deregisterStakeAddress` - Craft deregistration transaction
 - `POST /cardano/txcrafting/delegateStake` - Craft delegation transaction
 - `POST /cardano/txcrafting/registerAndDelegate` - Craft combined transaction
 

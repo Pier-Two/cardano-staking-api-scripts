@@ -1461,6 +1461,24 @@ export interface CardanoRegisterStakeAddressDto {
   changeAddress?: string;
 }
 
+export interface CardanoDeregisterStakeAddressDto {
+  /**
+   * The stake address to use for staking operations
+   * @example "stake1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  stakeAddress: string;
+  /**
+   * The address to use for UTXO selection
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  utxoAddress: string;
+  /**
+   * The address to spend utxos to. If not provided, the change will be returned to the utxoAddress
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  changeAddress?: string;
+}
+
 export interface CardanoDelegateStakeDto {
   /**
    * The stake address to use for staking operations
@@ -3295,6 +3313,29 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         any
       >({
         path: `/cardano/txcrafting/registerStakeAddress`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Craft a transaction for deregistering a Cardano stake address
+     *
+     * @tags Cardano
+     * @name CraftCardanoDeregisterStakeAddressTx
+     * @summary Craft Cardano Stake Address Deregistration Transaction
+     * @request POST:/cardano/txcrafting/deregisterStakeAddress
+     */
+    craftCardanoDeregisterStakeAddressTx: (data: CardanoDeregisterStakeAddressDto, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: CardanoTransactionCraftingResponse;
+        },
+        any
+      >({
+        path: `/cardano/txcrafting/deregisterStakeAddress`,
         method: "POST",
         body: data,
         type: ContentType.Json,

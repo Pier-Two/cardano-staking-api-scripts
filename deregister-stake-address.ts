@@ -34,24 +34,24 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parseSync();
 
-async function registerStakeAddress() {
+async function deregisterStakeAddress() {
   const spinner = ora(
-    "Deriving addresses and crafting stake address registration transaction...",
+    "Deriving addresses and crafting stake address deregistration transaction...",
   ).start();
 
   try {
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
-    const { paymentAddress, stakeAddress, paymentKey } = await derivePrivateKeyAndAddressesFromMnemonic(
+    const { paymentAddress, stakeAddress, stakeKey, paymentKey } = await derivePrivateKeyAndAddressesFromMnemonic(
       mnemonic,
       argv.addressIndex
     );
 
-    spinner.text = "Crafting stake address registration transaction...";
+    spinner.text = "Crafting stake address deregistration transaction...";
 
     const api = createApiClient();
 
-    const response = await api.cardano.craftCardanoRegisterStakeAddressTx(
+    const response = await api.cardano.craftCardanoDeregisterStakeAddressTx(
       {
         stakeAddress: stakeAddress,
         utxoAddress: paymentAddress,
@@ -67,7 +67,6 @@ async function registerStakeAddress() {
     console.log("\n📋 Transaction Details:");
     console.log(`   Stake Address: ${stakeAddress}`);
     console.log(`   Payment Address: ${paymentAddress}`);
-    console.log(`   Pool ID: ${argv.poolId}`);
     console.log(`   Fee: ${formatAdaAmount(response.data.fee)}`);
     console.log(`   UTXOs In: ${response.data.utxosIn.length}`);
     console.log(`   UTXOs Out: ${response.data.utxosOut.length}`);
@@ -80,8 +79,7 @@ async function registerStakeAddress() {
         
         const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
-          // only require signature from payment address since we are spending a utxo from it
-          [paymentKey],
+          [paymentKey, stakeKey],
           blockfrostApiKey
         );
         
@@ -122,16 +120,22 @@ async function registerStakeAddress() {
       "- The transaction fee will be deducted from your payment address",
     );
     console.log(
-      "- Stake address registration requires a deposit of 2 ADA (refundable)",
+      "- Stake address deregistration will refund the 2 ADA deposit",
+    );
+    console.log(
+      "- This will remove the stake address from the network",
+    );
+    console.log(
+      "- Any delegated stake will be returned to the payment address",
     );
   } catch (error) {
     spinner.fail("Failed to craft transaction");
-    handleApiError(error, "crafting stake address registration transaction");
+    handleApiError(error, "crafting stake address deregistration transaction");
     process.exit(1);
   }
 }
 
-registerStakeAddress().catch((error) => {
+deregisterStakeAddress().catch((error) => {
   console.error("Unexpected error:", error);
   process.exit(1);
 });

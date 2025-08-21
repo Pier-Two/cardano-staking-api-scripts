@@ -9,6 +9,7 @@
     "list-stakes": "node -r @swc-node/register list-stakes.ts",
     "list-addresses": "node -r @swc-node/register list-addresses.ts",
     "register-stake-address": "node -r @swc-node/register register-stake-address.ts",
+    "deregister-stake-address": "node -r @swc-node/register deregister-stake-address.ts",
     "delegate-stake": "node -r @swc-node/register delegate-stake.ts",
     "register-and-delegate": "node -r @swc-node/register register-and-delegate.ts",
     "debug-transaction": "node -r @swc-node/register debug-transaction.ts",
