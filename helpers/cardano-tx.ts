@@ -1,14 +1,27 @@
 import { getCardanoNetworkSync } from "./config";
 
 /**
- * Validate a Cardano address
+ * Validate a Cardano stake address
+ */
+export function isValidStakeAddress(address: string): boolean {
+  const stakeAddressRegex = /^stake_[a-z0-9]+$/;
+  return stakeAddressRegex.test(address);
+}
+
+/**
+ * Validate a Cardano payment address
+ */
+export function isValidPaymentAddress(address: string): boolean {
+  const paymentAddressRegex = /^addr_[a-z0-9]+$/;
+  return paymentAddressRegex.test(address);
+}
+
+/**
+ * Validate a Cardano address (stake or payment)
+ * @deprecated Use isValidStakeAddress or isValidPaymentAddress instead
  */
 export function isValidCardanoAddress(address: string): boolean {
-  // Basic Cardano address validation
-  const stakeAddressRegex = /^stake1[a-z0-9]{103}$/;
-  const paymentAddressRegex = /^addr1[a-z0-9]{98}$/;
-
-  return stakeAddressRegex.test(address) || paymentAddressRegex.test(address);
+  return isValidStakeAddress(address) || isValidPaymentAddress(address);
 }
 
 /**
@@ -16,7 +29,8 @@ export function isValidCardanoAddress(address: string): boolean {
  */
 export function isValidPoolId(poolId: string): boolean {
   // Cardano pool ID validation (hex string of 56 characters)
-  const poolIdRegex = /^[0-9a-f]{56}$/;
+  const poolIdRegex = /^pool[a-z0-9]+$/;
+
   return poolIdRegex.test(poolId);
 }
 
@@ -24,7 +38,7 @@ export function isValidPoolId(poolId: string): boolean {
  * Get the Cardano network configuration (synchronous version)
  */
 export function getCardanoNetwork() {
-  return getCardanoNetworkSync() === "mainnet" ? "mainnet" : "preview";
+  return getCardanoNetworkSync() === "mainnet" ? "mainnet" : "preprod";
 }
 
 /**

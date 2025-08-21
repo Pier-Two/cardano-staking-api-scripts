@@ -1,6 +1,14 @@
-import { MeshWallet, BlockfrostProvider } from '@meshsdk/core';
-import { getCardanoNetwork, getCardanoNetworkSync } from "./config";
+import { 
+    MeshWallet, 
+    BlockfrostProvider, 
+    deserializeDatum, 
+    Transaction,
+    DEFAULT_PROTOCOL_PARAMETERS,
+    MeshTxBuilder,
+} from '@meshsdk/core';
+import { csl } from '@meshsdk/core-csl';
 
+import { getCardanoNetwork, getCardanoNetworkSync } from "./config";
 /**
  * Initialize Mesh SDK with Blockfrost provider
  */
@@ -51,6 +59,7 @@ export async function createWallet(mnemonic: string, blockfrostApiKey: string): 
       type: 'mnemonic',
       words: mnemonic.split(' '),
     },
+    // accountIndex: 0,
   });
 
   return wallet;
@@ -90,13 +99,25 @@ export async function signAndSubmitTransaction(
   try {
     console.log(`Signing and submitting transaction...`);
     console.log(`Mnemonic: ${mnemonic.substring(0, 8)}...`);
-    console.log(`Unsigned transaction CBOR: ${unsignedTxCbor.substring(0, 50)}...`);
+    
+    // Debug: Inspect the transaction structure
+    // debugTransactionStructure(unsignedTxCbor);
+    
+    // Debug: Deserialize transaction CBOR to JSON
+    deserializeTransactionCbor(unsignedTxCbor);
 
     // Create wallet instance
     const wallet = await createWallet(mnemonic, blockfrostApiKey);
     
+    console.log(`🔍 DEBUG: About to sign transaction from ${wallet.addresses.baseAddressBech32}...`);
+    
     // Sign the transaction
-    const signedTx = await wallet.signTx(unsignedTxCbor, true);
+    const signedTx = await wallet.signTx(unsignedTxCbor);
+    
+    console.log(`🔍 DEBUG: Transaction signed successfully. Signed CBOR length: ${signedTx.length}`);
+    console.log(`🔍 DEBUG: Signed CBOR (first 100 chars): ${signedTx.substring(0, 100)}...`);
+    
+    console.log("🔍 DEBUG: About to submit signed transaction...");
     
     // Submit the signed transaction
     const txHash = await wallet.submitTx(signedTx);
@@ -104,6 +125,7 @@ export async function signAndSubmitTransaction(
     console.log(`Transaction submitted successfully: ${txHash}`);
     return txHash;
   } catch (error) {
+    console.error("🔍 DEBUG: Error details:", error);
     throw new Error(`Failed to sign and submit transaction: ${error}`);
   }
 }
@@ -244,5 +266,41 @@ export async function getTransactionStatus(
       };
     }
     throw new Error(`Failed to get transaction status: ${errorMessage}`);
+  }
+}
+
+
+/**
+ * Deserialize transaction CBOR to JSON using Mesh SDK's deserializeDatum
+ */
+export function deserializeTransactionCbor(cborHex: string) {
+  try {
+    console.log("\n🔍 DEBUG: Deserializing transaction CBOR to JSON...");
+    console.log(`Input CBOR (first 50 chars): ${cborHex.substring(0, 50)}...`);
+    
+    // const txBuilder = new MeshTxBuilder({
+    //     fetcher: blockchainProvider,
+    //     submitter: blockchainProvider,
+    //     params: DEFAULT_PROTOCOL_PARAMETERS,
+    // });
+
+    // const deserialized = txBuilder.serializer.deserializer
+
+    // Use Mesh SDK's deserializeDatum function
+    // const deserialized = deserializeDatum(cborHex);
+
+    const deserialized = csl.Transaction.from_hex(cborHex);
+    
+    const json = deserialized.to_json();
+
+    console.log("JSON Transaction:", json);
+    console.log("✅ Transaction deserialized successfully!");
+    console.log("📋 Deserialized transaction structure:");
+    console.log(JSON.stringify(deserialized, null, 2));
+    
+    return deserialized;
+  } catch (error) {
+    console.error("❌ Error deserializing transaction CBOR:", error);
+    throw new Error(`Failed to deserialize transaction CBOR: ${error}`);
   }
 } 

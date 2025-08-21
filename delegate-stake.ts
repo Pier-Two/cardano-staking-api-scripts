@@ -6,18 +6,20 @@ import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
 import {
-  isValidCardanoAddress,
+  isValidStakeAddress,
+  isValidPaymentAddress,
   isValidPoolId,
   formatAdaAmount,
 } from "./helpers/cardano-tx";
 import { pierTwoPoolId, getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
 import { signAndSubmitTransaction, getTransactionStatus } from "./helpers/mesh-sdk";
+import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic } from "./helpers/csl-sdk";
 
 const argv = yargs(hideBin(process.argv))
-  .option("stake-address", {
-    alias: "s",
-    type: "string",
-    description: "Cardano stake address to delegate",
+  .option("address-index", {
+    alias: "i",
+    type: "number",
+    description: "Address index to derive stake and payment addresses from",
     demandOption: true,
   })
   .option("pool-id", {
@@ -25,12 +27,6 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     description: "Stake pool ID to delegate to (defaults to Pier Two pool)",
     default: pierTwoPoolId,
-  })
-  .option("payment-address", {
-    alias: "a",
-    type: "string",
-    description:
-      "Payment address for UTXO selection (optional, defaults to reward address)",
   })
   .option("sign-and-submit", {
     alias: "s",
@@ -49,29 +45,29 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function delegateStake() {
-  const spinner = ora("Crafting stake delegation transaction...").start();
+  const spinner = ora("Deriving addresses and crafting stake delegation transaction...").start();
 
   try {
-    // Validate addresses
-    if (!isValidCardanoAddress(argv.stakeAddress)) {
-      throw new Error("Invalid Cardano stake address format");
-    }
-
     if (!isValidPoolId(argv.poolId)) {
       throw new Error("Invalid pool ID format");
     }
 
-    if (argv.paymentAddress && !isValidCardanoAddress(argv.paymentAddress)) {
-      throw new Error("Invalid payment address format");
-    }
+    // Derive addresses from mnemonic using the address index
+    const mnemonic = getCardanoMnemonic();
+    const { paymentAddress, stakeAddress } = await derivePrivateKeyAndAddressesFromMnemonic(
+      mnemonic,
+      argv.addressIndex
+    );
+
+    spinner.text = "Crafting stake delegation transaction...";
 
     const api = createApiClient();
 
     const response = await api.cardano.craftCardanoDelegateStakeTx(
       {
-        stakeAddress: argv.stakeAddress,
+        stakeAddress: stakeAddress,
         poolId: argv.poolId,
-        paymentAddress: argv.paymentAddress,
+        paymentAddress: paymentAddress,
       },
       {},
     );
@@ -79,6 +75,9 @@ async function delegateStake() {
     spinner.succeed("Transaction crafted successfully!");
 
     console.log("\n📋 Transaction Details:");
+    console.log(`   Stake Address: ${stakeAddress}`);
+    console.log(`   Payment Address: ${paymentAddress}`);
+    console.log(`   Pool ID: ${argv.poolId}`);
     console.log(`   Fee: ${formatAdaAmount(response.data.fee)}`);
     console.log(`   Transaction Size: ${response.data.txSize} bytes`);
     console.log(
@@ -92,12 +91,12 @@ async function delegateStake() {
       
       try {
         const blockfrostApiKey = getBlockfrostApiKey();
-        const mnemonic = getCardanoMnemonic();
         
-        const txHash = await signAndSubmitTransaction(
+        const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
           mnemonic,
-          blockfrostApiKey
+          blockfrostApiKey,
+          argv.addressIndex
         );
         
         spinner.succeed("Transaction signed and submitted successfully!");
@@ -109,7 +108,7 @@ async function delegateStake() {
           // Wait for confirmation (simplified for now)
           await new Promise(resolve => setTimeout(resolve, 5000));
           
-          const status = await getTransactionStatus(txHash, blockfrostApiKey);
+          const status = await getTransactionStatusCSL(txHash, blockfrostApiKey);
           if (status.confirmed) {
             spinner.succeed("Transaction confirmed!");
             console.log(`   Block Height: ${status.blockHeight}`);

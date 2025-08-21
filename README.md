@@ -56,7 +56,7 @@ PIER_TWO_POOL_ID=pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d
 Add a known Cardano stake account to your Pier Two account:
 
 ```bash
-pnpm add-stake-account --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --reference "My Fund" --label "Balance Sheet Stake"
+pnpm add-stake-account --address-index 0 --reference "My Fund" --label "Balance Sheet Stake"
 ```
 
 ### List Your Stakes
@@ -77,22 +77,22 @@ pnpm list-stakes --page-number 1 --page-size 20
 Craft a transaction to register a new stake address:
 
 ```bash
-pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f
+pnpm register-stake-address --address-index 0
 ```
 
 With custom pool:
 ```bash
-pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --pool-id pool1abc123...
+pnpm register-stake-address --address-index 0 --pool-id pool1abc123...
 ```
 
 Sign and submit automatically:
 ```bash
-pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
+pnpm register-stake-address --address-index 0 --sign-and-submit
 ```
 
 With confirmation waiting:
 ```bash
-pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit --wait-confirmation
+pnpm register-stake-address --address-index 0 --sign-and-submit --wait-confirmation
 ```
 
 ### Delegate Stake
@@ -100,12 +100,12 @@ pnpm register-stake-address --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9
 Craft a transaction to delegate stake to a pool:
 
 ```bash
-pnpm delegate-stake --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f
+pnpm delegate-stake --address-index 0
 ```
 
 Sign and submit automatically:
 ```bash
-pnpm delegate-stake --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
+pnpm delegate-stake --address-index 0 --sign-and-submit
 ```
 
 ### Register and Delegate
@@ -113,12 +113,12 @@ pnpm delegate-stake --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9
 Perform both registration and delegation in a single transaction:
 
 ```bash
-pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f
+pnpm register-and-delegate --address-index 0
 ```
 
 Sign and submit automatically:
 ```bash
-pnpm register-and-delegate --stake-address stake1u9klnfr0v4f2k3v2c0t4d0h3l2p8x9q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f --sign-and-submit
+pnpm register-and-delegate --address-index 0 --sign-and-submit
 ```
 
 ## Transaction Workflow
@@ -170,6 +170,33 @@ abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon 
 - **Mnemonic Storage**: Store your mnemonic securely in environment variables
 - **Never Commit**: Never commit mnemonics to version control
 - **Network Validation**: Always verify you're using the correct network (mainnet vs testnet)
+
+## Address Index Parameter
+
+All scripts now use an `--address-index` parameter instead of requiring you to specify stake and payment addresses manually. This parameter determines which addresses to derive from your mnemonic:
+
+### How It Works
+- **Address Index**: A numeric value (0, 1, 2, etc.) that specifies which set of addresses to use
+- **Automatic Derivation**: The script automatically derives both payment and stake addresses from your mnemonic
+- **BIP44 Path**: Uses the standard Cardano derivation path: `m/1852'/1815'/0'/0/{addressIndex}` for payment and `m/1852'/1815'/0'/2/0` for stake
+
+### Examples
+```bash
+# Use the first set of addresses (index 0)
+pnpm delegate-stake --address-index 0
+
+# Use the second set of addresses (index 1)  
+pnpm register-stake-address --address-index 1
+
+# Use the tenth set of addresses (index 9)
+pnpm register-and-delegate --address-index 9
+```
+
+### Benefits
+- **Simplified Usage**: No need to manually copy/paste addresses
+- **Reduced Errors**: Eliminates typos in address input
+- **Consistent**: Ensures payment and stake addresses are always from the same wallet
+- **Secure**: Addresses are derived locally from your mnemonic
 
 ## Configuration
 
