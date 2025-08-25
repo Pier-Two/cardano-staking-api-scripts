@@ -18,17 +18,22 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function listAddresses() {
-  const spinner = ora(`Deriving addresses for index ${argv.addressIndex}...`).start();
+  const spinner = ora(
+    `Deriving addresses for index ${argv.addressIndex}...`,
+  ).start();
 
   try {
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
-    const { paymentAddress, stakeAddress } = await derivePrivateKeyAndAddressesFromMnemonic(
-      mnemonic,
-      argv.addressIndex
-    );
+    const { paymentAddress, stakeAddress } =
+      await derivePrivateKeyAndAddressesFromMnemonic(
+        mnemonic,
+        argv.addressIndex,
+      );
 
-    spinner.succeed(`Addresses derived successfully for index ${argv.addressIndex}`);
+    spinner.succeed(
+      `Addresses derived successfully for index ${argv.addressIndex}`,
+    );
 
     console.log("\n📋 Address Details:");
     console.log("=".repeat(80));
@@ -42,12 +47,17 @@ async function listAddresses() {
     console.log(`   # Delegate stake using these addresses:`);
     console.log(`   pnpm delegate-stake --address-index ${argv.addressIndex}`);
     console.log(`   # Register stake address:`);
-    console.log(`   pnpm register-stake-address --address-index ${argv.addressIndex}`);
+    console.log(
+      `   pnpm register-stake-address --address-index ${argv.addressIndex}`,
+    );
     console.log(`   # Register and delegate:`);
-    console.log(`   pnpm register-and-delegate --address-index ${argv.addressIndex}`);
+    console.log(
+      `   pnpm register-and-delegate --address-index ${argv.addressIndex}`,
+    );
     console.log(`   # Add stake account:`);
-    console.log(`   pnpm add-stake-account --address-index ${argv.addressIndex} --reference "My Fund"`);
-
+    console.log(
+      `   pnpm add-stake-account --address-index ${argv.addressIndex} --reference "My Fund"`,
+    );
   } catch (error) {
     spinner.fail("Failed to derive addresses");
     console.error("Error:", error);

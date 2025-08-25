@@ -50,14 +50,9 @@ export const fallbackCardanoNetwork = process.env.CARDANO_NETWORK || "preprod";
  * Get Cardano network from API or fallback to environment variable
  */
 export async function getCardanoNetwork(): Promise<string> {
-  try {
-    const api = createApiClient();
-    const response = await api.public.networkConfig();
-    return response.data.cardano.network;
-  } catch (error) {
-    console.warn("Failed to fetch network config from API, using fallback:", fallbackCardanoNetwork);
-    return fallbackCardanoNetwork;
-  }
+  const api = createApiClient();
+  const response = await api.public.networkConfig();
+  return response.data.cardano.network;
 }
 
 /**

@@ -1495,11 +1495,6 @@ export interface CardanoDelegateStakeDto {
    * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
    */
   changeAddress?: string;
-  /**
-   * The stake pool ID to delegate to
-   * @example "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d"
-   */
-  poolId: string;
 }
 
 export interface CardanoRegisterAndDelegateDto {
@@ -1518,11 +1513,29 @@ export interface CardanoRegisterAndDelegateDto {
    * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
    */
   changeAddress?: string;
+}
+
+export interface CardanoStakingRewardsWithdrawalDto {
   /**
-   * The stake pool ID to delegate to
-   * @example "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d"
+   * The stake address to use for staking operations
+   * @example "stake1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
    */
-  poolId: string;
+  stakeAddress: string;
+  /**
+   * The address to use for UTXO selection
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  utxoAddress: string;
+  /**
+   * The address to spend utxos to. If not provided, the change will be returned to the utxoAddress
+   * @example "addr1qdzmqvfdnxsn4a3hd57x435madswynt4hqw8n7f2pdq05g4995re"
+   */
+  changeAddress?: string;
+  /**
+   * The amount of lovelace to withdraw
+   * @example "1000000"
+   */
+  amountLovelace: string;
 }
 
 export interface WebsiteDataPrices {
@@ -1604,6 +1617,547 @@ export interface SystemInfoResponse {
   ethStakingApiVersion: string;
 }
 
+export interface RegisterLsEthResponse {
+  /**
+   * Account status
+   * @example "ACTIVE"
+   */
+  status: string;
+  /**
+   * Account creation timestamp
+   * @example "2024-01-15T10:30:00Z"
+   */
+  createdAt: string;
+}
+
+export interface RegistrationStatusResponse {
+  /**
+   * Account status
+   * @example "ACTIVE"
+   */
+  status: string;
+}
+
+export interface WalletChallengeResponse {
+  /**
+   * Message to be signed by the wallet
+   * @example "Please sign this message to verify wallet ownership. Nonce: abc123def456"
+   */
+  message: string;
+  /**
+   * Unique nonce for this challenge
+   * @example "abc123def456"
+   */
+  nonce: string;
+  /**
+   * Expiration timestamp for this challenge
+   * @format date-time
+   * @example "2023-07-28T12:00:00.000Z"
+   */
+  expiresAt: string;
+}
+
+export interface WalletChallengeRequest {
+  /**
+   * Ethereum wallet address to verify ownership of
+   * @example "0x742d35Cc6634C0532925a3b8D084FB0F26f01234"
+   */
+  address: string;
+}
+
+export interface WalletDto {
+  /** Wallet address */
+  address: string;
+  /** Whether the wallet is allowlisted */
+  allowlisted: boolean;
+  /** Time the wallet was created */
+  createdAt: string;
+  /** Our UUID for this wallet */
+  id: string;
+  /** Whether the wallet is on platform */
+  onPlatform: boolean;
+  /** Status of the submission of the wallet account on-chain */
+  status: string;
+  /** The type of wallet - chain or protocol it exists on */
+  type: string;
+}
+
+export interface WalletVerifyResponse {
+  /**
+   * Indicates if wallet was successfully added
+   * @example true
+   */
+  success: boolean;
+  /** Wallet information from Alluvial */
+  wallet: WalletDto;
+}
+
+export interface WalletVerifyRequest {
+  /**
+   * Ethereum wallet address being verified
+   * @example "0x742d35Cc6634C0532925a3b8D084FB0F26f01234"
+   */
+  address: string;
+  /**
+   * Nonce from the challenge response
+   * @example "abc123def456"
+   */
+  nonce: string;
+  /**
+   * Signature of the challenge message
+   * @example "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+   */
+  signature: string;
+}
+
+export interface ListWalletsResponse {
+  /** Array of wallets for the user */
+  wallets: WalletDto[];
+}
+
+export interface ProtocolStatsResponse {
+  /**
+   * 7-day average staking reward rate
+   * @example "3.5"
+   */
+  aSrr7d: string;
+  /**
+   * ETH to LsETH conversion rate
+   * @example "1.0423421489732119402"
+   */
+  conversionRate: string;
+  /**
+   * Date of the protocol statistics
+   * @example "2025-08-08T00:58:48Z"
+   */
+  date: string;
+  /**
+   * Gross fee in LsETH
+   * @example "1234.56"
+   */
+  grossFeeLsEth: string;
+  /**
+   * Gross fee rate
+   * @example "0.1"
+   */
+  grossFeeRate: string;
+  /**
+   * Oracle report reference
+   * @example "19fedfa926a41b9d2e98f4f5bb30cd275de6be4cd6d9a45f20232bef61b6fa4600000088"
+   */
+  oracleReport: string;
+  /**
+   * Protocol service fee rate
+   * @example "0.1"
+   */
+  protocolServiceFeeRate: string;
+  /**
+   * Total rewards in ETH
+   * @example "12345.67"
+   */
+  rewardsEth: string;
+  /**
+   * Total ETH staked in the protocol
+   * @example "1000000.4234949295"
+   */
+  totalEthStaked: string;
+  /**
+   * Total LsETH token supply
+   * @example "950000.999586858321"
+   */
+  totalLsEthSupply: string;
+  /**
+   * Total number of active protocol validator keys
+   * @example 25000
+   */
+  totalProtocolActiveKeysCount: number;
+  /**
+   * Total LsETH burned by the protocol
+   * @example "50542.59394311209"
+   */
+  totalProtocolBurnsLsEth: string;
+  /**
+   * Total LsETH minted by the protocol
+   * @example "103509.4500201346984"
+   */
+  totalProtocolMintsLsEth: string;
+}
+
+export interface LsEthDepositDto {
+  /**
+   * The address to send the transaction from, this is required for accurate gas estimation and nonce calculation
+   * @example "0x0000000000000000000000000000000000000000"
+   */
+  fromAddress: string;
+  /**
+   * multiplier to apply to gas estimate, defaults to 1.2
+   * @example 1.2
+   */
+  gasEstimateMultiplier?: number;
+  /**
+   * Amount of ETH to deposit in wei
+   * @example "1000000000000000000"
+   */
+  amountWei: string;
+}
+
+export interface LsEthRedeemDto {
+  /**
+   * The address to send the transaction from, this is required for accurate gas estimation and nonce calculation
+   * @example "0x0000000000000000000000000000000000000000"
+   */
+  fromAddress: string;
+  /**
+   * multiplier to apply to gas estimate, defaults to 1.2
+   * @example 1.2
+   */
+  gasEstimateMultiplier?: number;
+  /**
+   * Amount of lsETH to redeem in wei
+   * @example "1000000000000000000"
+   */
+  lsEthAmountWei: string;
+  /**
+   * Recipient address for the redeemed ETH (can be different from fromAddress)
+   * @example "0x1234567890123456789012345678901234567890"
+   */
+  recipient: string;
+}
+
+export interface WalletBalanceResponse {
+  /**
+   * Wallet address
+   * @example "0xc8cd785c6ba55d71a6530c08d1df7ecbf090299c"
+   */
+  address: string;
+  /**
+   * LsETH balance
+   * @example "295022399276590070922"
+   */
+  lsEthBalance: string;
+  /**
+   * Block number
+   * @example 962779
+   */
+  blockNumber: number;
+}
+
+export interface RedeemRequestDto {
+  /**
+   * The ID of the redeem request
+   * @example 1234
+   */
+  id: number;
+  /**
+   * The owner of the redeem request
+   * @example "0x1234...5678"
+   */
+  owner: string;
+  /**
+   * The amount of the redeem request in lsETH (wei)
+   * @example "1000000000000000000"
+   */
+  totalAmountLsEth: string;
+  /**
+   * The maximum amount of ETH redeemable by this request (wei)
+   * @example "1000000000000000000"
+   */
+  maxRedeemableAmountEth: string;
+  /**
+   * The possible amount available to claim in lsETH (wei)
+   * @example "1000000000000000000"
+   */
+  claimableAmountLsEth: string;
+  /**
+   * The amount already claimed in ETH (wei)
+   * @example "0"
+   */
+  claimedAmountEth: string;
+  /**
+   * The amount already claimed in lsETH (wei)
+   * @example "0"
+   */
+  claimedAmountLsEth: string;
+  /**
+   * Block number when the request was made
+   * @example 19000000
+   */
+  requestedAt: number;
+  /**
+   * Timestamp when the request was made
+   * @example "2024-01-20T10:30:00Z"
+   */
+  timestamp: string;
+  /**
+   * The status of the claimed request
+   * @example "NOT_CLAIMED"
+   */
+  statusClaim:
+    | "NOT_CLAIMED"
+    | "PARTIALLY_CLAIMED"
+    | "FULLY_CLAIMED"
+    | "PENDING_SATISFACTION"
+    | "PARTIALLY_SATISFIED"
+    | "FULLY_SATISFIED";
+  /**
+   * The status of the satisfaction (withdrawal stack matching the redeem queue)
+   * @example "PENDING_SATISFACTION"
+   */
+  statusSatisfaction:
+    | "NOT_CLAIMED"
+    | "PARTIALLY_CLAIMED"
+    | "FULLY_CLAIMED"
+    | "PENDING_SATISFACTION"
+    | "PARTIALLY_SATISFIED"
+    | "FULLY_SATISFIED";
+  /**
+   * The withdrawal event ID needed to claim the redeem (or -1 when no withdrawals available)
+   * @example 123
+   */
+  withdrawalEventId: number;
+  /**
+   * The height is the cumulative sum of all the sizes of preceding redeem requests
+   * @example 100000
+   */
+  height: number;
+}
+
+export interface ListRedeemsResponse {
+  /** List of redemption requests */
+  redeems: RedeemRequestDto[];
+}
+
+export interface RedeemDetailsResponse {
+  /**
+   * The ID of the redeem request
+   * @example 1234
+   */
+  id: number;
+  /**
+   * The owner of the redeem request
+   * @example "0x1234...5678"
+   */
+  owner: string;
+  /**
+   * The amount of the redeem request in lsETH (wei)
+   * @example "1000000000000000000"
+   */
+  totalAmountLsEth: string;
+  /**
+   * The maximum amount of ETH redeemable by this request (wei)
+   * @example "1000000000000000000"
+   */
+  maxRedeemableAmountEth: string;
+  /**
+   * The possible amount available to claim in lsETH (wei)
+   * @example "1000000000000000000"
+   */
+  claimableAmountLsEth: string;
+  /**
+   * The amount already claimed in ETH (wei)
+   * @example "0"
+   */
+  claimedAmountEth: string;
+  /**
+   * The amount already claimed in lsETH (wei)
+   * @example "0"
+   */
+  claimedAmountLsEth: string;
+  /**
+   * Block number when the request was made
+   * @example 19000000
+   */
+  requestedAt: number;
+  /**
+   * Timestamp when the request was made
+   * @example "2024-01-20T10:30:00Z"
+   */
+  timestamp: string;
+  /**
+   * The status of the claimed request
+   * @example "NOT_CLAIMED"
+   */
+  statusClaim:
+    | "NOT_CLAIMED"
+    | "PARTIALLY_CLAIMED"
+    | "FULLY_CLAIMED"
+    | "PENDING_SATISFACTION"
+    | "PARTIALLY_SATISFIED"
+    | "FULLY_SATISFIED";
+  /**
+   * The status of the satisfaction (withdrawal stack matching the redeem queue)
+   * @example "PENDING_SATISFACTION"
+   */
+  statusSatisfaction:
+    | "NOT_CLAIMED"
+    | "PARTIALLY_CLAIMED"
+    | "FULLY_CLAIMED"
+    | "PENDING_SATISFACTION"
+    | "PARTIALLY_SATISFIED"
+    | "FULLY_SATISFIED";
+  /**
+   * The withdrawal event ID needed to claim the redeem (or -1 when no withdrawals available)
+   * @example 123
+   */
+  withdrawalEventId: number;
+  /**
+   * The height is the cumulative sum of all the sizes of preceding redeem requests
+   * @example 100000
+   */
+  height: number;
+  /**
+   * Customer ID associated with this redemption
+   * @example "67890abcdef"
+   */
+  customerId: string;
+}
+
+export interface RedeemProjectionResponse {
+  /**
+   * Customer ID associated with this redemption
+   * @example "67890abcdef"
+   */
+  customerId: string;
+  /**
+   * The redeem request ID
+   * @example 1234
+   */
+  redeemId: number;
+  /**
+   * Estimated time when the redemption will be satisfied
+   * @example "2024-02-01T10:30:00Z"
+   */
+  estimatedSatisfactionTime: string;
+  /**
+   * Estimated number of days until satisfaction
+   * @example 7
+   */
+  estimatedDaysUntilSatisfaction: number;
+  /**
+   * Whether the redemption is already satisfied
+   * @example true
+   */
+  isAlreadySatisfied: boolean;
+  /**
+   * Human-readable message about the projection
+   * @example "The redemption is expected to be satisfied in approximately 7 days"
+   */
+  message: string;
+}
+
+export interface ClaimRedeemDto {
+  /**
+   * The address that will send the transaction
+   * @example "0x1234567890123456789012345678901234567890"
+   */
+  fromAddress: string;
+  /**
+   * Array of redeem request IDs to claim
+   * @example [1234,1235]
+   */
+  redeemRequestIds: number[];
+  /**
+   * Array of withdrawal event IDs corresponding to the redeem requests
+   * @example [456,457]
+   */
+  withdrawalEventIds: number[];
+  /**
+   * Gas estimate multiplier (default: 1.2)
+   * @example 1.2
+   */
+  gasEstimateMultiplier?: number;
+}
+
+export interface WalletTransactionDto {
+  /**
+   * ETH amount involved in the transaction
+   * @example "1.5"
+   */
+  amountEth: string;
+  /**
+   * lsETH amount involved in the transaction
+   * @example "1.499"
+   */
+  amountLsEth: string;
+  /**
+   * ETH to lsETH conversion rate at time of transaction
+   * @example "1.000879064857666026"
+   */
+  conversionRate: string;
+  /**
+   * Transaction date in ISO format
+   * @example "2025-07-29T07:36:36Z"
+   */
+  date: string;
+  /**
+   * Whether the transaction is finalized
+   * @example true
+   */
+  finalized: boolean;
+  /**
+   * Blockchain transaction hash
+   * @example "0x6911f98fc06e1b834c704f271f234dbeed867d5a745dc0889f7dfd8b79274e3c"
+   */
+  transactionHash: string;
+  /**
+   * Type of transaction
+   * @example "DEPOSIT"
+   */
+  transactionType: "DEPOSIT" | "REDEEM" | "CLAIM";
+}
+
+export interface WalletTransactionHistoryResponse {
+  /** List of wallet transactions */
+  transactions: WalletTransactionDto[];
+  /**
+   * Cursor for next page of results
+   * @example "eyJhZnRlciI6IjIwMjUtMDctMjkifQ=="
+   */
+  nextCursor?: string;
+}
+
+export interface AggregateActivityItem {
+  /** Type of activity item */
+  type: "TRANSACTION" | "REDEMPTION";
+  /**
+   * Date of the activity in ISO format
+   * @example "2025-07-29T07:36:36Z"
+   */
+  date: string;
+  /**
+   * Wallet address associated with this activity
+   * @example "0x1234567890123456789012345678901234567890"
+   */
+  walletAddress: string;
+  /** Transaction data (only present when type is TRANSACTION) */
+  transaction?: WalletTransactionDto;
+  /** Redemption data (only present when type is REDEMPTION) */
+  redemption?: RedeemRequestDto;
+}
+
+export interface AggregateActivityResponse {
+  /** Array of activity items sorted by date (newest first) */
+  activities: AggregateActivityItem[];
+  /**
+   * Total number of activity items
+   * @example 25
+   */
+  totalCount: number;
+}
+
+export interface RedeemManagerInfoResponse {
+  /**
+   * The cumulative sum of the redeem request heights
+   * @example 1000
+   */
+  totalAmountRedeemQueueLsEth: number;
+  /**
+   * The cumulative sum of the withdrawal event heights
+   * @example 500
+   */
+  totalAmountWithdrawalStackLsEth: number;
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
 
@@ -1650,7 +2204,7 @@ export enum ContentType {
 }
 
 export class HttpClient<SecurityDataType = unknown> {
-  public baseUrl: string = "http://localhost:3000";
+  public baseUrl: string = "https://gw-1.api.test.piertwo.io";
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private abortControllers = new Map<CancelToken, AbortController>();
@@ -1816,8 +2370,8 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Pier Two Staking API
- * @version LOCAL_DEV_API_GATEWAY-devnet
- * @baseUrl http://localhost:3000
+ * @version 1.0.97-testnet
+ * @baseUrl https://gw-1.api.test.piertwo.io
  * @contact
  *
  * The Pier Two Staking API Docs
@@ -3388,6 +3942,29 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         format: "json",
         ...params,
       }),
+
+    /**
+     * @description Craft a transaction for withdrawing stake rewards
+     *
+     * @tags Cardano
+     * @name CraftCardanoStakingRewardsWithdrawalTx
+     * @summary Craft Cardano Stake Rewards Withdrawal Transaction
+     * @request POST:/cardano/txcrafting/stakingRewardsWithdrawal
+     */
+    craftCardanoStakingRewardsWithdrawalTx: (data: CardanoStakingRewardsWithdrawalDto, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: CardanoTransactionCraftingResponse;
+        },
+        any
+      >({
+        path: `/cardano/txcrafting/stakingRewardsWithdrawal`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
   };
   public = {
     /**
@@ -3476,6 +4053,436 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         any
       >({
         path: `/public/supportedCurrencies`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+  };
+  lsEth = {
+    /**
+     * @description Register user for liquid staking ETH services
+     *
+     * @tags LsEth
+     * @name RegisterLsEth
+     * @summary Register for liquid staking
+     * @request POST:/lsEth/register
+     */
+    registerLsEth: (params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: RegisterLsEthResponse;
+        },
+        any
+      >({
+        path: `/lsEth/register`,
+        method: "POST",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Check if user is registered for liquid staking ETH services
+     *
+     * @tags LsEth
+     * @name CheckLsEthRegistration
+     * @summary Check liquid staking registration status
+     * @request GET:/lsEth/registrationStatus
+     */
+    checkLsEthRegistration: (params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: RegistrationStatusResponse;
+        },
+        any
+      >({
+        path: `/lsEth/registrationStatus`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Generate a message with nonce that must be signed to prove wallet ownership
+     *
+     * @tags LsEth
+     * @name AddLsEthWalletChallenge
+     * @summary Generate wallet ownership challenge
+     * @request POST:/lsEth/wallet/add/challenge
+     */
+    addLsEthWalletChallenge: (data: WalletChallengeRequest, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: WalletChallengeResponse;
+        },
+        any
+      >({
+        path: `/lsEth/wallet/add/challenge`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Verify signed challenge and add wallet to Alluvial platform
+     *
+     * @tags LsEth
+     * @name AddLsEthWalletVerify
+     * @summary Verify wallet ownership and add wallet
+     * @request POST:/lsEth/wallet/add/verify
+     */
+    addLsEthWalletVerify: (data: WalletVerifyRequest, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: WalletVerifyResponse;
+        },
+        any
+      >({
+        path: `/lsEth/wallet/add/verify`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description List all wallets associated with the user account with pagination support
+     *
+     * @tags LsEth
+     * @name ListLsEthWallets
+     * @summary List user wallets
+     * @request GET:/lsEth/wallets
+     */
+    listLsEthWallets: (
+      query?: {
+        /**
+         * Enable to only return allowlisted wallets
+         * @example true
+         */
+        allowlist?: boolean;
+        /**
+         * Enable to only return wallets on platform
+         * @example true
+         */
+        onPlatform?: boolean;
+        /**
+         * Offset for pagination
+         * @min 0
+         * @example 0
+         */
+        offset?: number;
+        /**
+         * Limit for pagination
+         * @min 1
+         * @max 100
+         * @example 20
+         */
+        limit?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: ListWalletsResponse;
+        },
+        any
+      >({
+        path: `/lsEth/wallets`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get high-level current lsETH protocol statistics including conversion rate, staking rewards, and supply metrics
+     *
+     * @tags LsEth
+     * @name GetLsEthProtocolStats
+     * @summary Get lsETH protocol statistics
+     * @request GET:/lsEth/protocolStats
+     */
+    getLsEthProtocolStats: (
+      query?: {
+        /** Display lsETH values in units of wei. Defaults to ETH/lsETH with decimal representation if not specified. */
+        unit?: "wei";
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: ProtocolStatsResponse;
+        },
+        any
+      >({
+        path: `/lsEth/protocolStats`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Generate transaction data for depositing ETH to receive lsETH tokens
+     *
+     * @tags LsEth
+     * @name CraftLsEthDepositTx
+     * @summary Generate lsETH deposit transaction
+     * @request POST:/lsEth/txcrafting/deposit
+     */
+    craftLsEthDepositTx: (data: LsEthDepositDto, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: EthereumTransactionCraftingResponse;
+        },
+        any
+      >({
+        path: `/lsEth/txcrafting/deposit`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Generate transaction data for redeeming lsETH tokens to receive ETH
+     *
+     * @tags LsEth
+     * @name CraftLsEthRedeemTx
+     * @summary Generate lsETH redemption transaction
+     * @request POST:/lsEth/txcrafting/redeem
+     */
+    craftLsEthRedeemTx: (data: LsEthRedeemDto, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: EthereumTransactionCraftingResponse;
+        },
+        any
+      >({
+        path: `/lsEth/txcrafting/redeem`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get the lsETH and ETH balance for a wallet address linked to your account
+     *
+     * @tags LsEth
+     * @name GetLsEthWalletBalance
+     * @summary Get wallet lsETH and ETH balance
+     * @request GET:/lsEth/balance
+     */
+    getLsEthWalletBalance: (
+      query: {
+        /** Wallet address to check balance for (must be linked to your account) */
+        address: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: WalletBalanceResponse;
+        },
+        any
+      >({
+        path: `/lsEth/balance`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description List all redemption requests for your wallets or a specific wallet
+     *
+     * @tags LsEth
+     * @name ListLsEthRedeems
+     * @summary List redemption requests
+     * @request GET:/lsEth/redeems
+     */
+    listLsEthRedeems: (
+      query?: {
+        /** Optional wallet address to filter redemptions (must be linked to your account) */
+        walletAddress?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: ListRedeemsResponse;
+        },
+        any
+      >({
+        path: `/lsEth/redeems`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get details of a specific redemption request
+     *
+     * @tags LsEth
+     * @name GetLsEthRedeemDetails
+     * @summary Get redemption request details
+     * @request GET:/lsEth/redeems/{id}
+     */
+    getLsEthRedeemDetails: (id: number, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: RedeemDetailsResponse;
+        },
+        any
+      >({
+        path: `/lsEth/redeems/${id}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get estimated timing for when a redemption request will be satisfied
+     *
+     * @tags LsEth
+     * @name GetLsEthRedeemProjection
+     * @summary Get redemption timing projection
+     * @request GET:/lsEth/redeems/{id}/projection
+     */
+    getLsEthRedeemProjection: (id: number, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: RedeemProjectionResponse;
+        },
+        any
+      >({
+        path: `/lsEth/redeems/${id}/projection`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Generate transaction data for claiming ETH from satisfied redemption requests
+     *
+     * @tags LsEth
+     * @name CraftLsEthClaimRedeemTx
+     * @summary Generate claim redemption transaction
+     * @request POST:/lsEth/txcrafting/claim
+     */
+    craftLsEthClaimRedeemTx: (data: ClaimRedeemDto, params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: EthereumTransactionCraftingResponse;
+        },
+        any
+      >({
+        path: `/lsEth/txcrafting/claim`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get transaction history for a specific wallet address linked to your account
+     *
+     * @tags LsEth
+     * @name GetLsEthWalletTransactionHistory
+     * @summary Get wallet transaction history
+     * @request GET:/lsEth/transactions
+     */
+    getLsEthWalletTransactionHistory: (
+      query: {
+        address: string;
+        /**
+         * Start date for transaction history (ISO format)
+         * @example "2025-01-01T00:00:00Z"
+         */
+        from?: string;
+        /**
+         * End date for transaction history (ISO format)
+         * @example "2025-12-31T23:59:59Z"
+         */
+        to?: string;
+        /**
+         * Number of transactions per page (default: 100)
+         * @default 100
+         * @example 50
+         */
+        pageSize?: number;
+        /**
+         * Pagination cursor for next page
+         * @example "eyJhZnRlciI6IjIwMjUtMDctMjkifQ=="
+         */
+        nextCursor?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: WalletTransactionHistoryResponse;
+        },
+        any
+      >({
+        path: `/lsEth/transactions`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get combined transaction and redemption history from all allowlisted wallets, sorted by date
+     *
+     * @tags LsEth
+     * @name GetLsEthAggregateActivity
+     * @summary Get aggregate activity across all wallets
+     * @request GET:/lsEth/activity
+     */
+    getLsEthAggregateActivity: (
+      query?: {
+        /** Maximum number of activities to return (optional) */
+        limit?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: AggregateActivityResponse;
+        },
+        any
+      >({
+        path: `/lsEth/activity`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Get information about the redeem manager including queue and withdrawal stack amounts
+     *
+     * @tags LsEth
+     * @name GetLsEthRedeemManagerInfo
+     * @summary Get redeem manager information
+     * @request GET:/lsEth/redeemManagerInfo
+     */
+    getLsEthRedeemManagerInfo: (params: RequestParams = {}) =>
+      this.request<
+        UtilRequiredKeys<ApiResponseBase, "data"> & {
+          data: RedeemManagerInfoResponse;
+        },
+        any
+      >({
+        path: `/lsEth/redeemManagerInfo`,
         method: "GET",
         format: "json",
         ...params,

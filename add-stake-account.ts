@@ -5,14 +5,12 @@ import { hideBin } from "yargs/helpers";
 import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
-import { getCardanoMnemonic } from "./helpers/config";
-import { derivePrivateKeyAndAddressesFromMnemonic } from "./helpers/csl-sdk";
 
 const argv = yargs(hideBin(process.argv))
-  .option("address-index", {
-    alias: "i",
-    type: "number",
-    description: "Address index to derive stake address from",
+  .option("stake-address", {
+    alias: "a",
+    type: "string",
+    description: "Stake address to add",
     demandOption: true,
   })
   .option("reference", {
@@ -31,23 +29,17 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function addStakeAccount() {
-  const spinner = ora("Deriving stake address and adding stake account...").start();
+  const spinner = ora(
+    "Adding stake account...",
+  ).start();
 
   try {
-    // Derive stake address from mnemonic using the address index
-    const mnemonic = getCardanoMnemonic();
-    const { stakeAddress } = await derivePrivateKeyAndAddressesFromMnemonic(
-      mnemonic,
-      argv.addressIndex
-    );
-
-    spinner.text = "Adding stake account...";
 
     const api = createApiClient();
 
     const response = await api.cardano.addCardanoStakeAccount(
       {
-        stakeAccountAddress: stakeAddress,
+        stakeAccountAddress: argv["stake-address"],
         reference: argv.reference,
         label: argv.label,
       },
@@ -57,8 +49,7 @@ async function addStakeAccount() {
     spinner.succeed("Stake account added successfully!");
 
     console.log("\n📋 Stake Account Details:");
-    console.log(`   Address Index: ${argv.addressIndex}`);
-    console.log(`   Stake Address: ${stakeAddress}`);
+    console.log(`   Stake Address: ${argv["stake-address"]}`);
     console.log(`   Address: ${response.data.stakeAccountAddress}`);
     console.log(`   Pool ID: ${response.data.poolId}`);
     console.log(`   Status: ${response.data.status}`);

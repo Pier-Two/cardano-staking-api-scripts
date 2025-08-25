@@ -21,6 +21,12 @@ const argv = yargs(hideBin(process.argv))
     description: "Address index to derive stake and payment addresses from",
     demandOption: true,
   })
+  .option("amount", {
+    alias: "a",
+    type: "string",
+    description: "Amount to withdraw in lovelace (1 ADA = 1,000,000 lovelace)",
+    demandOption: true,
+  })
   .option("sign-and-submit", {
     alias: "s",
     type: "boolean",
@@ -37,12 +43,18 @@ const argv = yargs(hideBin(process.argv))
   .alias("help", "h")
   .parseSync();
 
-async function deregisterStakeAddress() {
+async function withdrawStakeRewards() {
   const spinner = ora(
-    "Deriving addresses and crafting stake address deregistration transaction...",
+    "Deriving addresses and crafting stake rewards withdrawal transaction...",
   ).start();
 
   try {
+    // Validate amount
+    const amountLovelace = parseInt(argv.amount);
+    if (isNaN(amountLovelace) || amountLovelace <= 0) {
+      throw new Error("Amount must be a positive number in lovelace");
+    }
+
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
     const { paymentAddress, stakeAddress, stakeKey, paymentKey } =
@@ -51,14 +63,15 @@ async function deregisterStakeAddress() {
         argv.addressIndex,
       );
 
-    spinner.text = "Crafting stake address deregistration transaction...";
+    spinner.text = "Crafting stake rewards withdrawal transaction...";
 
     const api = createApiClient();
 
-    const response = await api.cardano.craftCardanoDeregisterStakeAddressTx(
+    const response = await api.cardano.craftCardanoStakingRewardsWithdrawalTx(
       {
         stakeAddress: stakeAddress,
         utxoAddress: paymentAddress,
+        amountLovelace: argv.amount,
       },
       {},
     );
@@ -71,6 +84,9 @@ async function deregisterStakeAddress() {
     console.log("\n📋 Transaction Details:");
     console.log(`   Stake Address: ${stakeAddress}`);
     console.log(`   Payment Address: ${paymentAddress}`);
+    console.log(
+      `   Withdrawal Amount: ${formatAdaAmount(amountLovelace.toString())} (${amountLovelace} lovelace)`,
+    );
     console.log(`   Fee: ${formatAdaAmount(response.data.fee)}`);
     console.log(`   UTXOs In: ${response.data.utxosIn.length}`);
     console.log(`   UTXOs Out: ${response.data.utxosOut.length}`);
@@ -83,6 +99,7 @@ async function deregisterStakeAddress() {
 
         const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
+          // Require signatures from both payment and stake keys for withdrawal
           [paymentKey, stakeKey],
           blockfrostApiKey,
         );
@@ -128,19 +145,19 @@ async function deregisterStakeAddress() {
     console.log(
       "- The transaction fee will be deducted from your payment address",
     );
-    console.log("- Stake address deregistration will refund the 2 ADA deposit");
-    console.log("- This will remove the stake address from the network");
+    console.log("- Withdrawal amount will be sent to your payment address");
     console.log(
-      "- Any delegated stake will be returned to the payment address",
+      "- Only withdraw rewards that have been earned and are available",
     );
+    console.log("- Withdrawals are processed at the end of each epoch");
   } catch (error) {
     spinner.fail("Failed to craft transaction");
-    handleApiError(error, "crafting stake address deregistration transaction");
+    handleApiError(error, "crafting stake rewards withdrawal transaction");
     process.exit(1);
   }
 }
 
-deregisterStakeAddress().catch((error) => {
+withdrawStakeRewards().catch((error) => {
   console.error("Unexpected error:", error);
   process.exit(1);
 });

@@ -6,9 +6,12 @@ This repository contains scripts for interacting with the Pier Two Cardano staki
 
 - **Add Stake Accounts**: Add known Cardano stake accounts to your Pier Two account
 - **List Stakes**: View and manage your Cardano staking positions
+- **List Addresses**: View payment and stake addresses for a specific index
 - **Register Stake Address**: Craft transactions to register new stake addresses
+- **Deregister Stake Address**: Craft transactions to deregister stake addresses
 - **Delegate Stake**: Craft transactions to delegate stake to pools
 - **Register and Delegate**: Perform both operations in a single transaction
+- **Withdraw Stake Rewards**: Craft transactions to withdraw staking rewards
 
 ## Prerequisites
 
@@ -24,7 +27,7 @@ This repository contains scripts for interacting with the Pier Two Cardano staki
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd cardano-staking-scripts
+cd cardano-staking-api-scripts
 ```
 
 2. Install dependencies:
@@ -34,10 +37,10 @@ pnpm install
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
+# Create .env file manually with the following variables:
 ```
 
-Edit `.env` with your configuration:
+Create a `.env` file in the project root with your configuration:
 ```env
 # Required
 API_KEY=your_pier_two_api_key_here
@@ -46,8 +49,13 @@ CARDANO_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon
 
 # Optional
 API_BASE_URL=https://api.piertwo.com
+CARDANO_NETWORK=mainnet
 PIER_TWO_POOL_ID=pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d
 ```
+
+**Note**: There is no `.env.example` file in this repository. You must create the `.env` file manually with the variables above.
+
+To create your `.env` file, copy the template above and replace the placeholder values with your actual configuration.
 
 ## Usage
 
@@ -56,8 +64,10 @@ PIER_TWO_POOL_ID=pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d
 Add a known Cardano stake account to your Pier Two account:
 
 ```bash
-pnpm add-stake-account --address-index 0 --reference "My Fund" --label "Balance Sheet Stake"
+pnpm add-stake-account --stake-address stake1ux... --reference "My Fund" --label "Balance Sheet Stake"
 ```
+
+**Note**: This script currently requires the full stake address. For automatic address derivation, use `list-addresses` first to get the stake address for your desired index.
 
 ### List Your Stakes
 
@@ -126,6 +136,24 @@ With confirmation waiting:
 pnpm deregister-stake-address --address-index 0 --sign-and-submit --wait-confirmation
 ```
 
+### Withdraw Stake Rewards
+
+Craft a transaction to withdraw stake rewards:
+
+```bash
+pnpm withdraw-stake-rewards --address-index 0 --amount 1000000
+```
+
+Sign and submit automatically:
+```bash
+pnpm withdraw-stake-rewards --address-index 0 --amount 1000000 --sign-and-submit
+```
+
+With confirmation waiting:
+```bash
+pnpm withdraw-stake-rewards --address-index 0 --amount 1000000 --sign-and-submit --wait-confirmation
+```
+
 ### Delegate Stake
 
 Craft a transaction to delegate stake to a pool:
@@ -151,6 +179,8 @@ Sign and submit automatically:
 ```bash
 pnpm register-and-delegate --address-index 0 --sign-and-submit
 ```
+
+
 
 ## Transaction Workflow
 
@@ -182,12 +212,11 @@ This project now includes proper transaction signing using the Mesh SDK with mne
 3. **Network Configuration**: The network is automatically fetched from the Pier Two API. You can set `CARDANO_NETWORK` as a fallback if the API is unavailable
 
 ### Testing
-Test your wallet configuration:
-```bash
-pnpm test-wallet
-```
+Test your wallet configuration by running any of the scripts with the `--help` flag to verify your setup:
 
-This will verify that your mnemonic and Blockfrost API key are working correctly.
+```bash
+pnpm list-addresses --help
+```
 
 ### Mnemonic Format
 Your mnemonic should be a space-separated list of words (typically 12, 15, 18, 21, or 24 words). For example:
@@ -261,6 +290,7 @@ The scripts interact with the following Pier Two API endpoints:
 - `POST /cardano/stake/account` - Add stake account
 - `POST /cardano/txcrafting/registerStakeAddress` - Craft registration transaction
 - `POST /cardano/txcrafting/deregisterStakeAddress` - Craft deregistration transaction
+- `POST /cardano/txcrafting/stakingRewardsWithdrawal` - Craft rewards withdrawal transaction
 - `POST /cardano/txcrafting/delegateStake` - Craft delegation transaction
 - `POST /cardano/txcrafting/registerAndDelegate` - Craft combined transaction
 

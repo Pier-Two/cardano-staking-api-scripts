@@ -5,12 +5,14 @@ import { hideBin } from "yargs/helpers";
 import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
+import { formatAdaAmount } from "./helpers/cardano-tx";
+import { getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
 import {
-  isValidPoolId,
-  formatAdaAmount,
-} from "./helpers/cardano-tx";
-import { pierTwoPoolId, getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
-import { signAndSubmitTransactionCSL, getTransactionStatusCSL, derivePrivateKeyAndAddressesFromMnemonic, deserializeTransactionCbor } from "./helpers/csl-sdk";
+  signAndSubmitTransactionCSL,
+  getTransactionStatusCSL,
+  derivePrivateKeyAndAddressesFromMnemonic,
+  deserializeAndLogTransactionCbor,
+} from "./helpers/csl-sdk";
 
 const argv = yargs(hideBin(process.argv))
   .option("address-index", {
@@ -18,12 +20,6 @@ const argv = yargs(hideBin(process.argv))
     type: "number",
     description: "Address index to derive stake and payment addresses from",
     demandOption: true,
-  })
-  .option("pool-id", {
-    alias: "p",
-    type: "string",
-    description: "Stake pool ID to delegate to (defaults to Pier Two pool)",
-    default: pierTwoPoolId,
   })
   .option("sign-and-submit", {
     alias: "s",
@@ -42,24 +38,18 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function delegateStake() {
-  const spinner = ora("Deriving addresses and crafting stake delegation transaction...").start();
+  const spinner = ora(
+    "Deriving addresses and crafting stake delegation transaction...",
+  ).start();
 
   try {
-    if (!isValidPoolId(argv.poolId)) {
-      throw new Error("Invalid pool ID format");
-    }
-
     // Derive addresses from mnemonic using the address index
     const mnemonic = getCardanoMnemonic();
-    const { 
-      paymentAddress, 
-      stakeAddress, 
-      stakeKey, 
-      paymentKey 
-    } = await derivePrivateKeyAndAddressesFromMnemonic(
-      mnemonic,
-      argv.addressIndex
-    );
+    const { paymentAddress, stakeAddress, stakeKey, paymentKey } =
+      await derivePrivateKeyAndAddressesFromMnemonic(
+        mnemonic,
+        argv.addressIndex,
+      );
 
     spinner.text = "Crafting stake delegation transaction...";
 
@@ -68,14 +58,13 @@ async function delegateStake() {
     const response = await api.cardano.craftCardanoDelegateStakeTx(
       {
         stakeAddress: stakeAddress,
-        poolId: argv.poolId,
         utxoAddress: paymentAddress,
       },
       {},
     );
 
     // deserialize the transaction
-    deserializeTransactionCbor(response.data.unsignedTx);
+    deserializeAndLogTransactionCbor(response.data.unsignedTx);
 
     spinner.succeed("Transaction crafted successfully!");
 
@@ -89,27 +78,30 @@ async function delegateStake() {
 
     if (argv.signAndSubmit) {
       spinner.text = "Signing and submitting transaction...";
-      
+
       try {
         const blockfrostApiKey = getBlockfrostApiKey();
-        
+
         const txHash = await signAndSubmitTransactionCSL(
           response.data.unsignedTx,
           // requires signatures from both since we are spending utxos from the payment address
           [stakeKey, paymentKey],
-          blockfrostApiKey
+          blockfrostApiKey,
         );
-        
+
         spinner.succeed("Transaction signed and submitted successfully!");
         console.log(`\n✅ Transaction Hash: ${txHash}`);
-        
+
         if (argv.waitConfirmation) {
           spinner.text = "Waiting for transaction confirmation...";
-          
+
           // Wait for confirmation (simplified for now)
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          
-          const status = await getTransactionStatusCSL(txHash, blockfrostApiKey);
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+
+          const status = await getTransactionStatusCSL(
+            txHash,
+            blockfrostApiKey,
+          );
           if (status.confirmed) {
             spinner.succeed("Transaction confirmed!");
             console.log(`   Block Height: ${status.blockHeight}`);
@@ -126,7 +118,9 @@ async function delegateStake() {
     } else {
       console.log("\n🔧 Next Steps:");
       console.log("1. Sign the unsigned transaction using your wallet:");
-      console.log(`   Unsigned Transaction (CBOR): ${response.data.unsignedTx}`);
+      console.log(
+        `   Unsigned Transaction (CBOR): ${response.data.unsignedTx}`,
+      );
       console.log("\n2. Submit the signed transaction to the Cardano network");
       console.log("\n3. Wait for confirmation (typically 1-2 epochs)");
     }
