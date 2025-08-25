@@ -29,12 +29,9 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function addStakeAccount() {
-  const spinner = ora(
-    "Adding stake account...",
-  ).start();
+  const spinner = ora("Adding stake account...").start();
 
   try {
-
     const api = createApiClient();
 
     const response = await api.cardano.addCardanoStakeAccount(

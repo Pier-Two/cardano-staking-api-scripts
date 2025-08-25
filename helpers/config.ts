@@ -55,14 +55,6 @@ export async function getCardanoNetwork(): Promise<string> {
   return response.data.cardano.network;
 }
 
-/**
- * Get Cardano network synchronously (for backward compatibility)
- * This will use the fallback value
- */
-export function getCardanoNetworkSync(): string {
-  return fallbackCardanoNetwork;
-}
-
 export function getBlockfrostApiKey(): string {
   if (!blockfrostApiKey) {
     throw new Error("BLOCKFROST_API_KEY environment variable is required");

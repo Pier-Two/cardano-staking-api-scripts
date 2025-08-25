@@ -1,30 +1,12 @@
 import { MeshWallet, BlockfrostProvider } from "@meshsdk/core";
 import { csl } from "@meshsdk/core-csl";
 
-import { getCardanoNetwork, getCardanoNetworkSync } from "./config";
+import { getCardanoNetwork } from "./config";
 /**
  * Initialize Mesh SDK with Blockfrost provider
  */
 export async function initializeMesh(blockfrostApiKey: string) {
   const network = await getCardanoNetwork();
-  const networkId = (network === "mainnet" ? 1 : 0) as 0 | 1;
-
-  console.log(
-    `Initializing for ${network} network with Blockfrost API key: ${blockfrostApiKey.substring(0, 8)}...`,
-  );
-
-  return {
-    network,
-    networkId,
-    blockfrostApiKey,
-  };
-}
-
-/**
- * Initialize Mesh SDK with Blockfrost provider (synchronous version for backward compatibility)
- */
-export function initializeMeshSync(blockfrostApiKey: string) {
-  const network = getCardanoNetworkSync();
   const networkId = (network === "mainnet" ? 1 : 0) as 0 | 1;
 
   console.log(

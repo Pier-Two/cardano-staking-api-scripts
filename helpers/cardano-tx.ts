@@ -1,5 +1,3 @@
-import { getCardanoNetworkSync } from "./config";
-
 /**
  * Validate a Cardano stake address
  */
@@ -32,13 +30,6 @@ export function isValidPoolId(poolId: string): boolean {
   const poolIdRegex = /^pool[a-z0-9]+$/;
 
   return poolIdRegex.test(poolId);
-}
-
-/**
- * Get the Cardano network configuration (synchronous version)
- */
-export function getCardanoNetwork() {
-  return getCardanoNetworkSync() === "mainnet" ? "mainnet" : "preprod";
 }
 
 /**

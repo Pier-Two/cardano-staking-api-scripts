@@ -264,23 +264,16 @@ pnpm register-and-delegate --address-index 9
 
 #### Required
 - `API_KEY`: Your Pier Two API key
-- `BLOCKFROST_API_KEY`: Your Blockfrost API key for network access
+- `BLOCKFROST_API_KEY`: Your Blockfrost API key for submitting transactions to the network and checking tx status
 - `CARDANO_MNEMONIC`: Your Cardano mnemonic/seed phrase for wallet creation
-
-#### Optional
-- `API_BASE_URL`: API base URL (default: http://localhost:3000)
-- `CARDANO_NETWORK`: Fallback network if API is unavailable (mainnet, preview, preprod)
-- `PIER_TWO_POOL_ID`: Default pool ID for delegation
+- `API_BASE_URL`: API base URL (mainnet: https://gw-1.api.piertwo.io)
 
 ### Network Support
 
 The network configuration is automatically fetched from the Pier Two API to ensure you're always using the correct network for your environment.
 
 - **Mainnet**: Production Cardano network
-- **Preview**: Test network for development  
 - **Preprod**: Pre-production test network
-
-**Fallback**: If the API is unavailable, the system will use the `CARDANO_NETWORK` environment variable as a fallback.
 
 ## API Endpoints
 
@@ -333,7 +326,3 @@ For issues and questions:
 1. Check the [Pier Two documentation](https://docs.piertwo.com)
 2. Review the API error messages for troubleshooting
 3. Contact Pier Two support for API-related issues
-
-## License
-
-This project is licensed under the ISC License.
