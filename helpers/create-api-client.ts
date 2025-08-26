@@ -1,15 +1,9 @@
-// import { PierTwoStakingApi } from "@pier_two/staking-ts";
-import { Api } from "../generated/api";
+import { PierTwoStakingApi } from "@pier_two/staking-ts";
 import { apiBaseUrl, getApiKey } from "./config";
 
 export function createApiClient() {
-  return new Api({
+  return new PierTwoStakingApi({
     baseUrl: apiBaseUrl,
-    baseApiParams: {
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": getApiKey(),
-      },
-    },
+    apiKey: getApiKey(),
   });
 }
