@@ -6,10 +6,9 @@ import ora from "ora";
 import { createApiClient } from "./helpers/create-api-client";
 import { handleApiError } from "./helpers/handle-api-error";
 import { formatAdaAmount } from "./helpers/cardano-tx";
-import { getBlockfrostApiKey, getCardanoMnemonic } from "./helpers/config";
+import { getCardanoMnemonic } from "./helpers/config";
 import {
-  signAndSubmitTransactionCSL,
-  getTransactionStatusCSL,
+  signTransactionWithKeysCSL,
   derivePrivateKeyAndAddressesFromMnemonic,
   deserializeAndLogTransactionCbor,
 } from "./helpers/csl-sdk";
@@ -59,6 +58,10 @@ async function registerStakeAddress() {
       {
         stakeAddress: stakeAddress,
         utxoAddress: paymentAddress,
+        //@ts-ignore
+        reference: 'Testing with scripts again',
+        //@ts-ignore
+        label: 'testing 1'
       },
       {},
     );
@@ -80,17 +83,21 @@ async function registerStakeAddress() {
       spinner.text = "Signing and submitting transaction...";
 
       try {
-        const blockfrostApiKey = getBlockfrostApiKey();
-
-        const txHash = await signAndSubmitTransactionCSL(
+        // First, sign the transaction
+        const signedTxHex = await signTransactionWithKeysCSL(
           response.data.unsignedTx,
-          // only require signature from payment address since we are spending a utxo from it
-          [paymentKey],
-          blockfrostApiKey,
+          [paymentKey], // only require signature from payment address since we are spending a utxo from it
         );
 
+        spinner.text = "Submitting signed transaction...";
+
+        // Then, submit the signed transaction via Pier Two API
+        const txHash = await api.cardano.submitCardanoTransaction({
+          signedTx: signedTxHex,
+        });
+
         spinner.succeed("Transaction signed and submitted successfully!");
-        console.log(`\n✅ Transaction Hash: ${txHash}`);
+        console.log(`\n✅ Transaction Hash: ${txHash.data.txHash}`);
 
         if (argv.waitConfirmation) {
           spinner.text = "Waiting for transaction confirmation...";
@@ -98,16 +105,21 @@ async function registerStakeAddress() {
           // Wait for confirmation (simplified for now)
           await new Promise((resolve) => setTimeout(resolve, 5000));
 
-          const status = await getTransactionStatusCSL(
-            txHash,
-            blockfrostApiKey,
-          );
-          if (status.confirmed) {
-            spinner.succeed("Transaction confirmed!");
-            console.log(`   Block Height: ${status.blockHeight}`);
-          } else {
-            spinner.warn("Transaction submitted but not yet confirmed");
-            console.log("   Check the transaction hash on a Cardano explorer");
+          try {
+            const status = await api.cardano.getCardanoTransactionStatus(txHash.data.txHash);
+            if (status.data.block) {
+              spinner.succeed("Transaction confirmed!");
+              console.log(`   Block Height: ${status.data.block}`);
+              console.log(`   Block Time: ${status.data.blockTime}`);
+              console.log(`   Slot: ${status.data.slot}`);
+              console.log(`   Fees: ${status.data.fees} lovelace`);
+            } else {
+              spinner.warn("Transaction submitted but not yet confirmed");
+              console.log("   Check the transaction hash on a Cardano explorer");
+            }
+          } catch (error) {
+            spinner.warn("Could not check transaction status");
+            console.log("   Check the transaction hash on a Cardano explorer for status");
           }
         }
       } catch (error) {

@@ -122,20 +122,6 @@ export async function derivePrivateKeyAndAddressesFromMnemonic(
 }
 
 /**
- * Derive private key from mnemonic for a specific address index (legacy function)
- */
-export async function derivePrivateKeyFromMnemonic(
-  mnemonic: string,
-  addressIndex: number = 0,
-): Promise<CSL.PrivateKey> {
-  const result = await derivePrivateKeyAndAddressesFromMnemonic(
-    mnemonic,
-    addressIndex,
-  );
-  return result.privateKey;
-}
-
-/**
  * Deserialize transaction CBOR to JSON using CSL
  */
 export function deserializeAndLogTransactionCbor(cborHex: string) {
@@ -254,20 +240,14 @@ export function deserializeAndLogTransactionCbor(cborHex: string) {
 }
 
 /**
- * Sign and submit a Cardano transaction using CSL
+ * Sign a Cardano transaction using CSL (new implementation)
  */
-export async function signAndSubmitTransactionCSL(
+export async function signTransactionWithKeysCSL(
   unsignedTxCbor: string,
   signingKeys: CSL.PrivateKey[],
-  blockfrostApiKey: string,
 ): Promise<string> {
   try {
-    console.log(`Signing and submitting transaction with CSL...`);
-
-    // Debug: Deserialize transaction CBOR to JSON
-    deserializeAndLogTransactionCbor(unsignedTxCbor);
-
-    // Derive private key and address for the specified address index
+    console.log(`Signing transaction with CSL...`);
 
     // Deserialize transaction
     const tx = CSL.Transaction.from_bytes(Buffer.from(unsignedTxCbor, "hex"));
@@ -303,181 +283,9 @@ export async function signAndSubmitTransactionCSL(
       `✅ Transaction signed successfully. Signed CBOR length: ${signedTxHex.length}`,
     );
 
-    // deserialise the signed transaction and log for debugging purposes
-    console.log(`🔍 DEBUG: Signed transaction: ${signedTxHex}`);
-    deserializeAndLogTransactionCbor(signedTxHex);
-
-    // Submit the signed transaction using Blockfrost
-    const { network } = await initializeCSL();
-    const response = await fetch(
-      `https://cardano-${network === "mainnet" ? "mainnet" : "preprod"}.blockfrost.io/api/v0/tx/submit`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/cbor",
-          project_id: blockfrostApiKey,
-        },
-        body: Buffer.from(signedTxHex, "hex"),
-      },
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Blockfrost submission failed: ${response.status} ${errorText}`,
-      );
-    }
-
-    // Create transaction hash from body bytes (using CSL's built-in hashing)
-    const txHashHex = txBodyHash.to_hex();
-    console.log(`Transaction submitted successfully: ${txHashHex}`);
-
-    return txHashHex;
-  } catch (error) {
-    console.error("🔍 DEBUG: Error details:", error);
-    throw new Error(`Failed to sign and submit transaction: ${error}`);
-  }
-}
-
-/**
- * Sign a transaction without submitting it using CSL
- */
-export async function signTransactionCSL(
-  unsignedTxCbor: string,
-  mnemonic: string,
-  addressIndex: number = 0,
-): Promise<string> {
-  try {
-    console.log("Signing transaction with CSL...");
-    console.log(`Address index: ${addressIndex}`);
-
-    // Derive private key for the specified address index
-    const privateKey = await derivePrivateKeyFromMnemonic(
-      mnemonic,
-      addressIndex,
-    );
-
-    // Deserialize transaction
-    const tx = CSL.Transaction.from_bytes(Buffer.from(unsignedTxCbor, "hex"));
-
-    // Create witness set
-    const txBodyBytes = tx.body().to_bytes();
-
-    // Hash the transaction body before signing (this is the correct way)
-    // Use CSL's built-in TransactionHash.from_bytes which handles the hashing internally
-    const txBodyHash = CSL.TransactionHash.from_bytes(txBodyBytes);
-
-    // Use the CSL make_vkey_witness function which properly handles the transaction body hash
-    const vkeyWitness = CSL.make_vkey_witness(txBodyHash, privateKey);
-    const witnessSet = CSL.TransactionWitnessSet.new();
-    const vkeys = CSL.Vkeywitnesses.new();
-    vkeys.add(vkeyWitness);
-    witnessSet.set_vkeys(vkeys);
-
-    // Build signed transaction
-    const signedTx = CSL.Transaction.new(
-      tx.body(),
-      witnessSet,
-      tx.auxiliary_data(),
-    );
-
-    // Serialize to hex
-    const signedTxHex = Buffer.from(signedTx.to_bytes()).toString("hex");
-    console.log("Transaction signed successfully");
     return signedTxHex;
   } catch (error) {
+    console.error("🔍 DEBUG: Error details:", error);
     throw new Error(`Failed to sign transaction: ${error}`);
-  }
-}
-
-/**
- * Submit a signed transaction to the network using Blockfrost
- */
-export async function submitSignedTransactionCSL(
-  signedTxCbor: string,
-  blockfrostApiKey: string,
-): Promise<string> {
-  try {
-    const { network } = await initializeCSL();
-
-    console.log(`Submitting signed transaction to ${network} network...`);
-    console.log(`Signed transaction CBOR length: ${signedTxCbor.length}`);
-
-    const response = await fetch(
-      `https://cardano-${network === "mainnet" ? "mainnet" : "preprod"}.blockfrost.io/api/v0/tx/submit`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/cbor",
-          project_id: blockfrostApiKey,
-        },
-        body: Buffer.from(signedTxCbor, "hex"),
-      },
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Blockfrost submission failed: ${response.status} ${errorText}`,
-      );
-    }
-
-    const result = await response.text();
-    console.log(`Transaction submitted successfully: ${result}`);
-    return result;
-  } catch (error) {
-    throw new Error(`Failed to submit transaction: ${error}`);
-  }
-}
-
-/**
- * Get transaction status from Blockfrost
- */
-export async function getTransactionStatusCSL(
-  txHash: string,
-  blockfrostApiKey: string,
-): Promise<{ confirmed: boolean; blockHeight?: number }> {
-  try {
-    console.log(`Checking transaction status for: ${txHash}`);
-
-    const { network } = await initializeCSL();
-    const response = await fetch(
-      `https://cardano-${network === "mainnet" ? "mainnet" : "preprod"}.blockfrost.io/api/v0/txs/${txHash}`,
-      {
-        headers: {
-          project_id: blockfrostApiKey,
-        },
-      },
-    );
-
-    if (response.ok) {
-      const txDetails = await response.json();
-      if (txDetails.block) {
-        return {
-          confirmed: true,
-          blockHeight: txDetails.block,
-        };
-      } else {
-        return {
-          confirmed: false,
-          blockHeight: undefined,
-        };
-      }
-    } else {
-      return {
-        confirmed: false,
-        blockHeight: undefined,
-      };
-    }
-  } catch (error) {
-    // If transaction not found, it might still be in mempool
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-      return {
-        confirmed: false,
-        blockHeight: undefined,
-      };
-    }
-    throw new Error(`Failed to get transaction status: ${errorMessage}`);
   }
 }

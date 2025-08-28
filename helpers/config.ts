@@ -27,11 +27,6 @@ export const pierTwoPoolId =
   "pool1mhww3q6d7qssj5j2add05r7cyr7znyswe2g6vd23anpx5sh6z8d";
 
 /**
- * Blockfrost API key for network access
- */
-export const blockfrostApiKey = process.env.BLOCKFROST_API_KEY;
-
-/**
  * Cardano mnemonic/seed phrase for wallet creation
  */
 export const cardanoMnemonic = process.env.CARDANO_MNEMONIC;
@@ -55,23 +50,9 @@ export async function getCardanoNetwork(): Promise<string> {
   return response.data.cardano.network;
 }
 
-export function getBlockfrostApiKey(): string {
-  if (!blockfrostApiKey) {
-    throw new Error("BLOCKFROST_API_KEY environment variable is required");
-  }
-  return blockfrostApiKey;
-}
-
 export function getCardanoMnemonic(): string {
   if (!cardanoMnemonic) {
     throw new Error("CARDANO_MNEMONIC environment variable is required");
   }
   return cardanoMnemonic;
-}
-
-export function getCardanoPrivateKey(): string {
-  if (!cardanoPrivateKey) {
-    throw new Error("CARDANO_PRIVATE_KEY environment variable is required");
-  }
-  return cardanoPrivateKey;
 }

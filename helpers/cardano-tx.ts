@@ -23,16 +23,6 @@ export function isValidCardanoAddress(address: string): boolean {
 }
 
 /**
- * Validate a Cardano stake pool ID
- */
-export function isValidPoolId(poolId: string): boolean {
-  // Cardano pool ID validation (hex string of 56 characters)
-  const poolIdRegex = /^pool[a-z0-9]+$/;
-
-  return poolIdRegex.test(poolId);
-}
-
-/**
  * Format ADA amount from lovelace to ADA
  */
 export function formatAdaAmount(lovelace: string): string {
