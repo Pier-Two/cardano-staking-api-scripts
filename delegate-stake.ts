@@ -58,8 +58,8 @@ async function delegateStake() {
       {
         stakeAddress: stakeAddress,
         utxoAddress: paymentAddress,
-        reference: 'Test Fund',
-        label: 'Test Stake'
+        reference: "Test Fund",
+        label: "Test Stake",
       },
       {},
     );
@@ -95,7 +95,9 @@ async function delegateStake() {
         });
 
         spinner.succeed("Transaction signed and submitted successfully!");
-        console.log(`\n✅ Transaction Hash: ${JSON.stringify(txHash.data, null, 2)}`);
+        console.log(
+          `\n✅ Transaction Hash: ${JSON.stringify(txHash.data, null, 2)}`,
+        );
 
         if (argv.waitConfirmation) {
           spinner.text = "Waiting for transaction confirmation...";
@@ -104,7 +106,9 @@ async function delegateStake() {
           await new Promise((resolve) => setTimeout(resolve, 5000));
 
           try {
-            const status = await api.cardano.getCardanoTransactionStatus(txHash.data.txHash);
+            const status = await api.cardano.getCardanoTransactionStatus(
+              txHash.data.txHash,
+            );
             if (status.data.block) {
               spinner.succeed("Transaction confirmed!");
               console.log(`   Block Height: ${status.data.block}`);
@@ -113,11 +117,18 @@ async function delegateStake() {
               console.log(`   Fees: ${status.data.fees} lovelace`);
             } else {
               spinner.warn("Transaction submitted but not yet confirmed");
-              console.log("   Check the transaction hash on a Cardano explorer");
+              console.log(
+                "   Check the transaction hash on a Cardano explorer",
+              );
             }
-          } catch (error) {
-            spinner.warn("Could not check transaction status");
-            console.log("   Check the transaction hash on a Cardano explorer for status");
+            // eslint-disable-next-line
+          } catch (error: any) {
+            spinner.warn(
+              `Could not check transaction status: ${error.message}`,
+            );
+            console.log(
+              "   Check the transaction hash on a Cardano explorer for status",
+            );
           }
         }
       } catch (error) {

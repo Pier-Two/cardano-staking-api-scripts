@@ -7,7 +7,10 @@ const prettierConfig = require("eslint-config-prettier");
 module.exports = [
   // Ignore the eslint config file itself
   {
-    ignores: ["eslint.config.js"],
+    ignores: [
+      "eslint.config.js",
+      "build/**"
+    ],
   },
   // Config for TypeScript files
   eslintJs.configs.recommended,

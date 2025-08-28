@@ -101,7 +101,9 @@ async function deregisterStakeAddress() {
           await new Promise((resolve) => setTimeout(resolve, 5000));
 
           try {
-            const status = await api.cardano.getCardanoTransactionStatus(txHash.data.txHash);
+            const status = await api.cardano.getCardanoTransactionStatus(
+              txHash.data.txHash,
+            );
             if (status.data.block) {
               spinner.succeed("Transaction confirmed!");
               console.log(`   Block Height: ${status.data.block}`);
@@ -110,11 +112,18 @@ async function deregisterStakeAddress() {
               console.log(`   Fees: ${status.data.fees} lovelace`);
             } else {
               spinner.warn("Transaction submitted but not yet confirmed");
-              console.log("   Check the transaction hash on a Cardano explorer");
+              console.log(
+                "   Check the transaction hash on a Cardano explorer",
+              );
             }
-          } catch (error) {
-            spinner.warn("Could not check transaction status");
-            console.log("   Check the transaction hash on a Cardano explorer for status");
+            // eslint-disable-next-line
+          } catch (error: any) {
+            spinner.warn(
+              `Could not check transaction status: ${error.message}`,
+            );
+            console.log(
+              "   Check the transaction hash on a Cardano explorer for status",
+            );
           }
         }
       } catch (error) {
