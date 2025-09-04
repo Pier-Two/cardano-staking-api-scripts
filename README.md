@@ -43,7 +43,7 @@ copy the `.env.example` contents into a `.env` file in the project root with you
 # Required
 API_KEY=your_pier_two_api_key_here
 CARDANO_MNEMONIC=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
-API_BASE_URL=https://api.piertwo.com
+API_BASE_URL=https://gw-1.api.test.piertwo.io
 ```
 
 To create your `.env` file, copy the template above and replace the placeholder values with your actual configuration.
